@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { IntakeQuestion } from "@/types/handoff";
+import { FileUploadBlock } from "./file-upload-block";
 
 export function DetailsForm({
   token,
@@ -15,6 +16,12 @@ export function DetailsForm({
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [answers, setAnswers] = useState(defaults?.answers ?? {});
+
+  const visibleQuestions = questions.filter((question) => {
+    if (!question.conditional_on) return true;
+    return answers[question.conditional_on.question_id] === question.conditional_on.equals;
+  });
 
   return (
     <form
@@ -22,7 +29,7 @@ export function DetailsForm({
       onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
-        const answers = Object.fromEntries(questions.map((question) => [question.id, String(form.get(question.id) ?? "")]));
+        const payloadAnswers = Object.fromEntries(visibleQuestions.map((question) => [question.id, String(form.get(question.id) ?? "")]));
         const response = await fetch(`/api/client-flow/${token}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -31,7 +38,7 @@ export function DetailsForm({
             name: form.get("name"),
             email: form.get("email"),
             phone: form.get("phone"),
-            answers,
+            answers: payloadAnswers,
           }),
         });
         const data = await response.json();
@@ -54,12 +61,32 @@ export function DetailsForm({
         <span className="label">Phone</span>
         <input className="field mt-1" name="phone" defaultValue={defaults?.phone ?? ""} />
       </label>
-      {questions.map((question) => (
+      {visibleQuestions.map((question) => (
         <label className="block" key={question.id}>
           <span className="label">{question.label}</span>
-          <textarea className="field mt-1 min-h-28" name={question.id} defaultValue={defaults?.answers?.[question.id] ?? ""} />
+          {question.type === "select" ? (
+            <select
+              className="field mt-1"
+              name={question.id}
+              value={answers[question.id] ?? ""}
+              onChange={(event) => setAnswers({ ...answers, [question.id]: event.target.value })}
+            >
+              <option value="">Choose one</option>
+              {(question.options ?? []).map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          ) : (
+            <textarea
+              className="field mt-1 min-h-28"
+              name={question.id}
+              value={answers[question.id] ?? ""}
+              onChange={(event) => setAnswers({ ...answers, [question.id]: event.target.value })}
+            />
+          )}
         </label>
       ))}
+      <FileUploadBlock token={token} />
       {error ? <p className="text-sm text-[var(--red)]">{error}</p> : null}
       <button className="btn-primary w-full" type="submit">
         Continue to agreement

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { createServerSupabase, createServiceSupabase } from "@/lib/supabase";
-import { defaultContractText, defaultQuestions } from "@/lib/data";
+import { defaultContractText, defaultPaymentSchedule, defaultQuestions } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +57,7 @@ async function createAgencyAction(formData: FormData) {
       ],
       contract_text: defaultContractText,
       deposit_amount: depositAmount,
+      payment_schedule: [{ ...defaultPaymentSchedule[0], amount: depositAmount }],
     })
     .select("*")
     .single();

@@ -11,6 +11,19 @@ export type SubscriptionStatus =
 export type IntakeQuestion = {
   id: string;
   label: string;
+  type?: "text" | "textarea" | "select";
+  options?: string[];
+  conditional_on?: {
+    question_id: string;
+    equals: string;
+  } | null;
+};
+
+export type PaymentMilestone = {
+  id: string;
+  label: string;
+  amount: number;
+  due: "onboarding" | "midpoint" | "final";
 };
 
 export type Agency = {
@@ -34,6 +47,7 @@ export type OnboardingFlow = {
   questions: IntakeQuestion[];
   contract_text: string;
   deposit_amount: number;
+  payment_schedule: PaymentMilestone[];
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -51,6 +65,8 @@ export type Client = {
   signed_at: string | null;
   signature_name: string | null;
   signature_ip: string | null;
+  signature_user_agent: string | null;
+  contract_snapshot: string | null;
   paid_at: string | null;
   stripe_payment_intent_id: string | null;
   amount_paid: number | null;
@@ -59,6 +75,9 @@ export type Client = {
   status: ClientStatus;
   created_at: string;
   updated_at: string;
+  last_active_at: string | null;
+  reminder_24h_sent_at: string | null;
+  reminder_3d_sent_at: string | null;
 };
 
 export type AvailableSlot = {
@@ -75,4 +94,16 @@ export type ClientBundle = {
   flow: OnboardingFlow;
   client: Client;
   slots: AvailableSlot[];
+  files: ClientFile[];
+};
+
+export type ClientFile = {
+  id: string;
+  agency_id: string;
+  client_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  mime_type: string | null;
+  created_at: string;
 };

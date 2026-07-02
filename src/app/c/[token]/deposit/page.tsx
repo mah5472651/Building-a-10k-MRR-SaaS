@@ -23,8 +23,19 @@ export default async function DepositPage({
         This deposit confirms the kickoff and will be applied to your project balance.
       </p>
       <div className="my-8 border-y border-[var(--line)] py-6">
-        <p className="label">Deposit due</p>
-        <p className="serif mt-1 text-[28px] font-medium">${Number(bundle.flow.deposit_amount).toFixed(2)}</p>
+        <p className="label">Due now</p>
+        <p className="serif mt-1 text-[28px] font-medium">
+          ${Number((bundle.flow.payment_schedule?.find((item) => item.due === "onboarding") ?? bundle.flow.payment_schedule?.[0])?.amount ?? bundle.flow.deposit_amount).toFixed(2)}
+        </p>
+      </div>
+      <div className="mb-6 rounded-xl border border-[var(--ink-100)] bg-[var(--paper-50)] p-4">
+        <p className="label mb-3">Payment schedule</p>
+        {(bundle.flow.payment_schedule?.length ? bundle.flow.payment_schedule : [{ id: "deposit", label: "Deposit", amount: bundle.flow.deposit_amount, due: "onboarding" }]).map((milestone) => (
+          <div className="flex justify-between border-t border-[var(--ink-100)] py-2 text-sm first:border-t-0" key={milestone.id}>
+            <span>{milestone.label}</span>
+            <span className="font-mono">${Number(milestone.amount).toFixed(2)}</span>
+          </div>
+        ))}
       </div>
       <CheckoutButton endpoint="/api/stripe/deposit-checkout" payload={{ token }} label="Pay deposit" />
     </ClientFrame>

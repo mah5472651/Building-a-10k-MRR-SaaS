@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { Agency, AvailableSlot, Client, ClientBundle, OnboardingFlow } from "@/types/handoff";
+import type { Agency, AvailableSlot, Client, ClientBundle, ClientFile, OnboardingFlow, PaymentMilestone } from "@/types/handoff";
 import { createServerSupabase, createServiceSupabase } from "./supabase";
 import { isSubscriptionUsable } from "./state";
 
@@ -51,9 +51,19 @@ export async function getActiveFlow(agencyId: string) {
   return data as OnboardingFlow;
 }
 
+export async function getFlows(agencyId: string) {
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("onboarding_flows")
+    .select("*")
+    .eq("agency_id", agencyId)
+    .order("created_at", { ascending: true });
+  return (data ?? []) as OnboardingFlow[];
+}
+
 export async function getDashboardData(agencyId: string) {
   const supabase = await createServerSupabase();
-  const [{ data: clients }, { data: slots }, flow] = await Promise.all([
+  const [{ data: clients }, { data: slots }, flows] = await Promise.all([
     supabase
       .from("clients")
       .select("*")
@@ -64,12 +74,13 @@ export async function getDashboardData(agencyId: string) {
       .select("*")
       .eq("agency_id", agencyId)
       .order("datetime", { ascending: true }),
-    getActiveFlow(agencyId),
+    getFlows(agencyId),
   ]);
 
   const rows = (clients ?? []) as Client[];
   return {
-    flow,
+    flow: flows.find((flow) => flow.active) ?? flows[0] ?? null,
+    flows,
     slots: (slots ?? []) as AvailableSlot[],
     clients: rows,
     stats: {
@@ -97,7 +108,14 @@ export async function getClientDetail(clientId: string, agencyId: string) {
     .eq("id", client.flow_id)
     .single();
 
-  return { client: client as Client, flow: flow as OnboardingFlow };
+  const { data: files } = await supabase
+    .from("client_files")
+    .select("*")
+    .eq("client_id", client.id)
+    .eq("agency_id", agencyId)
+    .order("created_at", { ascending: false });
+
+  return { client: client as Client, flow: flow as OnboardingFlow, files: (files ?? []) as ClientFile[] };
 }
 
 export async function getClientBundleByToken(token: string): Promise<ClientBundle | null> {
@@ -110,7 +128,7 @@ export async function getClientBundleByToken(token: string): Promise<ClientBundl
 
   if (!client) return null;
 
-  const [{ data: agency }, { data: flow }, { data: slots }] = await Promise.all([
+  const [{ data: agency }, { data: flow }, { data: slots }, { data: files }] = await Promise.all([
     supabase.from("agencies").select("*").eq("id", client.agency_id).single(),
     supabase.from("onboarding_flows").select("*").eq("id", client.flow_id).single(),
     supabase
@@ -119,6 +137,11 @@ export async function getClientBundleByToken(token: string): Promise<ClientBundl
       .eq("agency_id", client.agency_id)
       .eq("is_booked", false)
       .order("datetime", { ascending: true }),
+    supabase
+      .from("client_files")
+      .select("*")
+      .eq("client_id", client.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!agency || !flow) return null;
@@ -127,6 +150,7 @@ export async function getClientBundleByToken(token: string): Promise<ClientBundl
     flow: flow as OnboardingFlow,
     client: client as Client,
     slots: (slots ?? []) as AvailableSlot[],
+    files: (files ?? []) as ClientFile[],
   };
 }
 
@@ -141,3 +165,7 @@ export const defaultQuestions = [
 
 export const defaultContractText =
   "This agreement confirms the client authorizes the agency to begin the onboarding and kickoff process for the described services. The deposit is due before kickoff and will be applied to the project balance. By typing your name, you agree that this electronic signature is valid and binding.";
+
+export const defaultPaymentSchedule: PaymentMilestone[] = [
+  { id: "deposit", label: "Deposit", amount: 500, due: "onboarding" },
+];

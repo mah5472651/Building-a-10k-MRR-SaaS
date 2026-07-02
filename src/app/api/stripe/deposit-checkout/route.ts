@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
   const bundle = await getClientBundleByToken(String(token));
   if (!bundle) return NextResponse.json({ error: "Invalid client link." }, { status: 404 });
 
-  const amount = Math.max(0, Math.round(Number(bundle.flow.deposit_amount) * 100));
+  const firstMilestone = bundle.flow.payment_schedule?.find((item) => item.due === "onboarding") ??
+    bundle.flow.payment_schedule?.[0];
+  const dueAmount = Number(firstMilestone?.amount ?? bundle.flow.deposit_amount);
+  const amount = Math.max(0, Math.round(dueAmount * 100));
   if (amount === 0) {
     await createServiceSupabase()
       .from("clients")
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
         quantity: 1,
         price_data: {
           currency: "usd",
-          product_data: { name: `${bundle.agency.name} onboarding deposit` },
+          product_data: { name: `${bundle.agency.name} ${firstMilestone?.label ?? "onboarding deposit"}` },
           unit_amount: amount,
         },
       },

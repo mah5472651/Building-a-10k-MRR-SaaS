@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download, FileText } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AgencyShell } from "@/components/agency-shell";
 import { CopyButton } from "@/components/copy-button";
@@ -70,9 +71,44 @@ export default async function ClientDetailPage({
           ))}
           <KeyValue label="Signature" value={client.signature_name} />
           <KeyValue label="Signature IP" value={client.signature_ip} />
+          <KeyValue label="User agent" value={client.signature_user_agent} />
           <KeyValue label="Booked time" value={client.meeting_time} />
+          {client.signed_at ? (
+            <Link className="btn-secondary mt-4 flex items-center justify-center gap-2 text-sm" href={`/api/clients/${client.id}/signature-record`} target="_blank">
+              <FileText size={15} />
+              View signature record
+            </Link>
+          ) : null}
         </section>
       </div>
+      <section className="card mt-6 p-6">
+        <h2 className="serif mb-4 text-[19px] font-medium">Uploaded files</h2>
+        {detail.files.length ? (
+          <div className="space-y-2">
+            {detail.files.map((file) => (
+              <a
+                className="flex items-center justify-between rounded-lg border border-[var(--ink-100)] bg-[var(--paper-50)] px-3 py-2 text-sm"
+                href={`/api/client-files/${file.id}/download`}
+                key={file.id}
+              >
+                <span>{file.file_name}</span>
+                <Download size={15} />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--ink-soft)]">No files uploaded yet.</p>
+        )}
+      </section>
+      <section className="card mt-6 p-6">
+        <h2 className="serif mb-4 text-[19px] font-medium">Payment schedule</h2>
+        {(flow.payment_schedule?.length ? flow.payment_schedule : [{ id: "deposit", label: "Deposit", amount: flow.deposit_amount, due: "onboarding" }]).map((milestone) => (
+          <div className="flex justify-between border-t border-[var(--line)] py-3 text-sm" key={milestone.id}>
+            <span>{milestone.label} <span className="text-[var(--ink-soft)]">({milestone.due})</span></span>
+            <span className="font-mono">${Number(milestone.amount).toFixed(2)}</span>
+          </div>
+        ))}
+      </section>
     </AgencyShell>
   );
 }

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ClientsPage() {
   const { agency } = await requireCurrentAgency();
-  const { clients } = await getDashboardData(agency.id);
+  const { clients, flows } = await getDashboardData(agency.id);
 
   return (
     <AgencyShell title="Clients" active="Clients">
@@ -20,7 +20,7 @@ export default async function ClientsPage() {
             <h2 className="serif text-[19px] font-medium">Client pipeline</h2>
             <p className="mt-1 text-sm text-[var(--ink-soft)]">Track every link, intake, signature, payment, and kickoff.</p>
           </div>
-          <GenerateLinkButton />
+          <GenerateLinkButton flows={flows} />
         </div>
         {clients.length ? (
           clients.map((client) => <ClientRow key={client.id} client={client} />)

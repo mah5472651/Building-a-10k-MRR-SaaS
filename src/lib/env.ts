@@ -21,3 +21,11 @@ export function hasServiceSupabaseEnv() {
       process.env.SUPABASE_SERVICE_ROLE_KEY,
   );
 }
+
+export function hasTwilioEnv() {
+  return Boolean(
+    process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_FROM_NUMBER,
+  );
+}

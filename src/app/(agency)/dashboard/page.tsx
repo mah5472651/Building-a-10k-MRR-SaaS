@@ -6,6 +6,7 @@ import { GenerateLinkButton } from "@/components/generate-link-button";
 import { CopyButton } from "@/components/copy-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { EmptyState } from "@/components/empty-state";
+import { FunnelAnalytics } from "@/components/funnel-analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const { agency } = await requireCurrentAgency();
-  const { clients, stats } = await getDashboardData(agency.id);
+  const { clients, stats, flows } = await getDashboardData(agency.id);
   const readyLink = params.link ? `${appUrl}/c/${params.link}` : "";
 
   return (
@@ -44,7 +45,7 @@ export default async function DashboardPage({
             <h2 className="serif text-[19px] font-medium">Client link</h2>
             <p className="mt-1 text-sm text-[var(--ink-soft)]">Create a unique link for the next client.</p>
           </div>
-          <GenerateLinkButton />
+          <GenerateLinkButton flows={flows} />
         </div>
         {readyLink ? (
           <div className="mt-5 flex flex-col gap-3 rounded-lg border border-dashed border-[var(--line-strong)] p-3 md:flex-row md:items-center">
@@ -53,6 +54,8 @@ export default async function DashboardPage({
           </div>
         ) : null}
       </section>
+
+      <FunnelAnalytics clients={clients} />
 
       <section id="clients" className="card p-6">
         <div className="mb-2 flex items-center justify-between">

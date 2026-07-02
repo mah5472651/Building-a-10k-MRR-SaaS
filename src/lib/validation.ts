@@ -3,6 +3,22 @@ import { z } from "zod";
 export const questionSchema = z.object({
   id: z.string().min(1),
   label: z.string().min(2).max(160),
+  type: z.enum(["text", "textarea", "select"]).optional().default("textarea"),
+  options: z.array(z.string().min(1).max(80)).optional().default([]),
+  conditional_on: z
+    .object({
+      question_id: z.string().min(1),
+      equals: z.string().min(1),
+    })
+    .nullable()
+    .optional(),
+});
+
+export const paymentMilestoneSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1).max(80),
+  amount: z.coerce.number().min(0).max(100000),
+  due: z.enum(["onboarding", "midpoint", "final"]),
 });
 
 export const flowSchema = z.object({
@@ -10,6 +26,7 @@ export const flowSchema = z.object({
   questions: z.array(questionSchema).min(1).max(12),
   contract_text: z.string().min(20),
   deposit_amount: z.coerce.number().min(0).max(100000),
+  payment_schedule: z.array(paymentMilestoneSchema).min(1).max(3).optional(),
 });
 
 export const onboardingSchema = z.object({

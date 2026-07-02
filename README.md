@@ -15,7 +15,7 @@ Open `http://localhost:3000/login`.
 ## Configure services
 
 1. Create a Supabase project and run `supabase/schema.sql`.
-   If you already ran the original schema, also run `supabase/002_v1_hardening.sql`.
+   If you already ran the original schema, also run `supabase/002_v1_hardening.sql` and `supabase/003_advanced_features.sql`.
 2. Fill `.env.local` with Supabase URL, anon key, and service role key.
 3. Add Stripe secret, webhook secret, and plan price IDs.
 4. Add Resend API key and sender email.
@@ -32,6 +32,8 @@ This code is a real Next.js web app. To make it usable outside your computer:
 6. In Stripe, add a webhook endpoint pointing to `https://your-domain.com/api/webhooks/stripe`.
 
 The dashboard uses Supabase Realtime for client and slot updates.
+
+Advanced v1 features include multi-flow onboarding, conditional questions, client file uploads, milestone payment schedules, signature audit records, funnel analytics, and a cron endpoint for stalled-client nudges at `/api/cron/nudges`.
 
 ## Verify
 

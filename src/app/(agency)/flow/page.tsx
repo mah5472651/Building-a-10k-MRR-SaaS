@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AgencyShell } from "@/components/agency-shell";
 import { QuestionEditor } from "@/components/question-editor";
 import { RemoveSlotButton } from "@/components/remove-slot-button";
-import { defaultContractText, defaultQuestions, getActiveFlow, getDashboardData, requireCurrentAgency } from "@/lib/data";
+import { MilestoneEditor } from "@/components/milestone-editor";
+import { defaultContractText, defaultPaymentSchedule, defaultQuestions, getDashboardData, requireCurrentAgency } from "@/lib/data";
 import { createServerSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +38,7 @@ async function saveFlowAction(formData: FormData) {
       questions,
       contract_text: String(formData.get("contract_text") ?? defaultContractText),
       deposit_amount: Number(formData.get("deposit_amount") ?? 0),
+      payment_schedule: parsePaymentSchedule(formData),
       updated_at: new Date().toISOString(),
     })
     .eq("id", flowId)
@@ -49,15 +52,82 @@ async function saveFlowAction(formData: FormData) {
   redirect("/flow?saved=1");
 }
 
-export default async function FlowPage() {
+function parsePaymentSchedule(formData: FormData) {
+  try {
+    const parsed = JSON.parse(String(formData.get("payment_schedule_json") ?? "[]"));
+    if (Array.isArray(parsed) && parsed.length) {
+      return parsed.slice(0, 3).map((item, index) => ({
+        id: typeof item.id === "string" ? item.id : `milestone-${index + 1}`,
+        label: typeof item.label === "string" ? item.label : `Milestone ${index + 1}`,
+        amount: Number(item.amount) || 0,
+        due: ["onboarding", "midpoint", "final"].includes(item.due) ? item.due : "onboarding",
+      }));
+    }
+  } catch {}
+  return defaultPaymentSchedule;
+}
+
+async function createFlowAction(formData: FormData) {
+  "use server";
+
   const { agency } = await requireCurrentAgency();
-  const flow = await getActiveFlow(agency.id);
-  const { slots } = await getDashboardData(agency.id);
+  const supabase = await createServerSupabase();
+  const title = String(formData.get("new_flow_title") ?? "New onboarding flow");
+  const { data } = await supabase
+    .from("onboarding_flows")
+    .insert({
+      agency_id: agency.id,
+      title,
+      questions: defaultQuestions,
+      contract_text: defaultContractText,
+      deposit_amount: defaultPaymentSchedule[0].amount,
+      payment_schedule: defaultPaymentSchedule,
+      active: false,
+    })
+    .select("id")
+    .single();
+  redirect(data ? `/flow?flow=${data.id}` : "/flow");
+}
+
+export default async function FlowPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ flow?: string }>;
+}) {
+  const params = await searchParams;
+  const { agency } = await requireCurrentAgency();
+  const { slots, flows } = await getDashboardData(agency.id);
+  const flow = flows.find((row) => row.id === params.flow) ?? flows.find((row) => row.active) ?? flows[0];
 
   if (!flow) redirect("/onboarding");
 
   return (
     <AgencyShell title="Onboarding flow" active="Onboarding flow">
+      <section className="card mb-5 p-6">
+        <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center">
+          <div>
+            <h2 className="serif text-[19px] font-medium">Service flows</h2>
+            <p className="mt-1 text-sm text-[var(--ink-600)]">Create a separate onboarding flow for each service line.</p>
+          </div>
+          <form action={createFlowAction} className="flex gap-2">
+            <input className="field min-w-0" name="new_flow_title" placeholder="SEO Retainer Onboarding" />
+            <button className="btn-secondary" type="submit">Create</button>
+          </form>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {flows.map((item) => (
+            <Link
+              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                item.id === flow.id ? "border-[var(--ink-800)] bg-[var(--amber-100)]" : "border-[var(--ink-100)] bg-[var(--paper-50)]"
+              }`}
+              href={`/flow?flow=${item.id}`}
+              key={item.id}
+            >
+              {item.title}
+            </Link>
+          ))}
+        </div>
+      </section>
       <form action={saveFlowAction} className="space-y-5">
         <input type="hidden" name="flow_id" value={flow.id} />
         <section className="card p-6">
@@ -77,11 +147,14 @@ export default async function FlowPage() {
         </section>
 
         <section className="card p-6">
-          <h2 className="serif mb-4 text-[19px] font-medium">Deposit</h2>
+          <h2 className="serif mb-4 text-[19px] font-medium">Deposit and milestones</h2>
           <label className="block max-w-xs">
             <span className="label">Fixed deposit, USD</span>
             <input className="field mt-1" name="deposit_amount" type="number" min="0" defaultValue={flow.deposit_amount} />
           </label>
+          <div className="mt-5">
+            <MilestoneEditor milestones={flow.payment_schedule?.length ? flow.payment_schedule : [{ id: "deposit", label: "Deposit", amount: flow.deposit_amount, due: "onboarding" }]} />
+          </div>
         </section>
 
         <section className="card p-6">

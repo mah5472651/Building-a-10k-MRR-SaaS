@@ -26,6 +26,9 @@ export function ClientRow({ client }: { client: Client }) {
           <p className="text-xs text-[var(--ink-soft)]">
             {client.email ?? "No email yet"} · {formatDistanceToNow(new Date(client.created_at), { addSuffix: true })}
           </p>
+          <p className="text-xs text-[var(--ink-soft)]">
+            Last active {client.last_active_at ? formatDistanceToNow(new Date(client.last_active_at), { addSuffix: true }) : "never"}
+          </p>
         </div>
       </div>
       <ProgressDots count={completedStepCount(client)} />

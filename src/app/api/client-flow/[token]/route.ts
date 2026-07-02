@@ -11,6 +11,10 @@ export async function GET(
   const { token } = await params;
   const bundle = await getClientBundleByToken(token);
   if (!bundle) return NextResponse.json({ error: "Invalid client link." }, { status: 404 });
+  await createServiceSupabase()
+    .from("clients")
+    .update({ last_active_at: new Date().toISOString() })
+    .eq("id", bundle.client.id);
   return NextResponse.json(bundle);
 }
 
@@ -38,6 +42,7 @@ export async function PATCH(
         phone: parsed.data.phone,
         answers: parsed.data.answers,
         status: "in_progress",
+        last_active_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", bundle.client.id);
@@ -54,13 +59,18 @@ export async function PATCH(
       request.headers.get("x-real-ip") ??
       "unknown";
 
+    const userAgent = request.headers.get("user-agent") ?? "unknown";
+
     await supabase
       .from("clients")
       .update({
         signature_name: parsed.data.signature_name,
         signature_ip: ip,
+        signature_user_agent: userAgent,
+        contract_snapshot: bundle.flow.contract_text,
         signed_at: new Date().toISOString(),
         status: "in_progress",
+        last_active_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", bundle.client.id);
@@ -93,6 +103,7 @@ export async function PATCH(
         scheduled_at: slot.datetime,
         meeting_time: slot.datetime,
         status: "completed",
+        last_active_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", bundle.client.id);
