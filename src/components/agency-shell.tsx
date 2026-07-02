@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
+import { ChevronLeft, LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
 import { signOutAction } from "@/lib/auth-actions";
 import { Logo } from "./logo";
 import { NotificationCenter } from "./notification-center";
@@ -25,16 +25,19 @@ export function AgencyShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--paper-100)] pb-20 text-[var(--ink-800)] md:flex md:pb-0">
-      <aside className="hidden bg-[var(--ink-900)] px-3 py-5 text-[var(--paper-0)] md:fixed md:inset-y-0 md:left-0 md:flex md:w-16 md:flex-col lg:w-[240px]">
-        <div className="hidden px-2 lg:block">
+    <div className="premium-shell min-h-screen pb-20 text-[var(--ink-800)] md:flex md:pb-0">
+      <aside className="glass-sidebar hidden px-3 py-5 text-[var(--ink-800)] md:fixed md:inset-y-0 md:left-0 md:flex md:w-16 md:flex-col lg:w-[260px]">
+        <div className="hidden items-center justify-between px-2 lg:flex">
           <Logo />
+          <button className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white/5 text-[var(--ink-soft)]" type="button" aria-label="Collapse sidebar">
+            <ChevronLeft size={16} />
+          </button>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/aeitron-logo.jpeg"
           alt=""
-          className="h-10 w-10 rounded-lg border border-[#31423d] object-cover lg:hidden"
+          className="h-10 w-10 rounded-xl border border-[var(--line)] object-cover shadow-lg lg:hidden"
         />
         <nav className="mt-7 flex flex-col gap-1">
           {navItems.map((item, index) => {
@@ -46,13 +49,13 @@ export function AgencyShell({
                 href={item.href}
                 title={item.label}
                 style={{ animationDelay: `${index * 45}ms` }}
-                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                   selected
-                    ? "text-[var(--paper-0)]"
+                    ? "nav-active-glow text-[var(--ink-900)]"
                     : "text-[#8A9A93] hover:text-[var(--paper-0)]"
                 } nav-item`}
               >
-                {selected ? <span className="absolute left-0 h-5 w-[3px] rounded-full bg-[var(--amber-500)]" /> : null}
+                {selected ? <span className="absolute right-2 h-5 w-[3px] rounded-full bg-[var(--amber-500)] shadow-[0_0_16px_rgba(255,177,74,0.55)]" /> : null}
                 <Icon size={20} />
                 <span className="hidden lg:inline">{item.label}</span>
               </Link>
@@ -60,12 +63,12 @@ export function AgencyShell({
           })}
         </nav>
         <form action={signOutAction} className="mt-auto hidden lg:block">
-          <button className="w-full rounded-lg border border-[#31423d] px-3 py-2 text-sm font-medium text-[#8A9A93] transition-colors hover:border-[var(--amber-100)] hover:text-[var(--paper-0)]" type="submit">
+          <button className="w-full rounded-xl border border-[var(--line)] bg-white/5 px-3 py-2 text-sm font-medium text-[#8A9A93] transition-colors hover:border-[var(--amber-100)] hover:text-[var(--paper-0)]" type="submit">
             Logout
           </button>
         </form>
       </aside>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--ink-100)] bg-[var(--ink-900)] px-2 py-2 md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--line)] bg-[rgba(8,11,19,0.88)] px-2 py-2 backdrop-blur-xl md:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const selected = active === item.label;
@@ -74,7 +77,7 @@ export function AgencyShell({
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
-                selected ? "text-[var(--amber-100)]" : "text-[#8A9A93]"
+                selected ? "bg-white/10 text-[var(--amber-100)]" : "text-[#8A9A93]"
               }`}
             >
               <Icon size={18} />
@@ -83,10 +86,13 @@ export function AgencyShell({
           );
         })}
       </nav>
-      <main className="flex-1 px-4 py-10 md:ml-16 md:px-8 md:py-14 lg:ml-[240px]">
-        <div className="agency-page mx-auto max-w-[900px]">
+      <main className="flex-1 px-4 py-8 md:ml-16 md:px-8 md:py-10 lg:ml-[260px]">
+        <div className="agency-page mx-auto max-w-[1120px]">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <h1 className="serif text-[24px] leading-[30px] font-medium">{title}</h1>
+            <div>
+              <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)]">Overview</p>
+              <h1 className="text-[26px] leading-[32px] font-semibold">{title}</h1>
+            </div>
             <div className="flex items-center gap-2">
               <CommandPalette />
               {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}

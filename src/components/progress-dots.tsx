@@ -10,7 +10,7 @@ export function ProgressDots({ count, size = 6 }: { count: number; size?: number
             animationDelay: `${step * 60}ms`,
           }}
           className={`rounded-full transition-transform group-hover:[animation:mini-dot-pulse_180ms_ease-out] ${
-            step < count ? "bg-[var(--amber-500)]" : "bg-[var(--ink-100)]"
+            step < count ? "bg-[var(--amber-500)] shadow-[0_0_10px_rgba(255,177,74,0.55)]" : "bg-[var(--ink-100)]"
           }`}
         />
       ))}

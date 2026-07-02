@@ -7,9 +7,9 @@ export function Logo({ href = "/dashboard" }: { href?: string }) {
       <img
         src="/aeitron-logo.jpeg"
         alt=""
-        className="h-9 w-9 rounded-lg border border-[var(--ink-100)] object-cover"
+        className="h-9 w-9 rounded-xl border border-[var(--line)] object-cover shadow-[0_0_24px_rgba(141,124,255,0.18)]"
       />
-      <span className="serif text-xl font-medium text-current">Aeitron AI</span>
+      <span className="text-xl font-semibold tracking-[-0.02em] text-current">Aeitron AI</span>
     </Link>
   );
 }

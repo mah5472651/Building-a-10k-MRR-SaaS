@@ -25,10 +25,10 @@ export function ClientFrame({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-[var(--paper)] px-4 py-6">
+    <main className="premium-shell min-h-screen px-4 py-6">
       <ProgressTitle current={current} />
       <section className="agency-page mx-auto max-w-[640px]">
-        <div className="mb-7 flex items-center justify-between gap-4">
+        <div className="mb-7 flex items-center justify-between gap-4 rounded-2xl border border-[var(--line)] bg-white/[0.035] p-3 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

@@ -18,7 +18,7 @@ export function ClientRow({ client }: { client: Client }) {
     <div className="client-row group relative grid gap-4 border-t border-[var(--ink-100)] px-4 py-4 transition-colors hover:bg-[var(--paper-50)] md:grid-cols-[1fr_auto_auto_auto] md:items-center">
       <span className="absolute inset-y-0 left-0 w-[3px] bg-transparent transition-colors group-hover:bg-[var(--amber-500)]" />
       <div className="flex items-center gap-3">
-        <div className="grid h-9 w-9 place-items-center rounded-full bg-[var(--teal-tint)] text-sm font-semibold text-[var(--teal)] ring-2 ring-[var(--paper-100)]">
+        <div className="grid h-9 w-9 place-items-center rounded-full border border-[rgba(72,240,194,0.25)] bg-[var(--teal-tint)] text-sm font-semibold text-[var(--teal)] shadow-[0_0_22px_rgba(72,240,194,0.12)] ring-2 ring-black/20">
           {initials}
         </div>
         <div>

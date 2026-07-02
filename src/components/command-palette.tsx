@@ -38,7 +38,7 @@ export function CommandPalette() {
   return (
     <>
       <button
-        className="hidden h-10 items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--paper-50)] px-3 text-sm text-[var(--ink-soft)] shadow-sm transition hover:border-[var(--ink-800)] hover:bg-[var(--paper-0)] md:flex"
+        className="hidden h-10 items-center gap-2 rounded-xl border border-[var(--line)] bg-white/[0.045] px-3 text-sm text-[var(--ink-soft)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08] md:flex"
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -48,7 +48,7 @@ export function CommandPalette() {
       </button>
       {open ? (
         <div className="fixed inset-0 z-[60] bg-[rgba(14,28,24,0.28)] px-4 py-20 backdrop-blur-sm" onClick={() => setOpen(false)}>
-          <div className="premium-popover mx-auto max-w-lg rounded-2xl border border-[var(--line)] bg-[var(--paper-0)] p-3 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="premium-popover mx-auto max-w-lg rounded-2xl border border-[var(--line)] bg-[rgba(10,14,24,0.95)] p-3 shadow-2xl backdrop-blur-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-[var(--line)] px-2 pb-3">
               <Search size={18} className="text-[var(--ink-soft)]" />
               <input
@@ -62,7 +62,7 @@ export function CommandPalette() {
             <div className="mt-2 space-y-1">
               {filtered.map((command) => (
                 <button
-                  className="w-full rounded-lg px-3 py-3 text-left text-sm transition hover:bg-[var(--paper-50)]"
+                  className="w-full rounded-xl px-3 py-3 text-left text-sm transition hover:bg-white/[0.07]"
                   key={command.href}
                   onClick={() => {
                     setOpen(false);
