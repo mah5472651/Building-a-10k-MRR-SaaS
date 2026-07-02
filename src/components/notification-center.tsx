@@ -16,16 +16,22 @@ const labels: Record<string, string> = {
   stalled: "Client stalled",
 };
 
-export function NotificationCenter({ agencyId }: { agencyId: string }) {
+export function NotificationCenter({
+  agencyId,
+  open,
+  onOpenChange,
+}: {
+  agencyId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [onlineCount, setOnlineCount] = useState(1);
   const [notifications, setNotifications] = useState<NotificationEvent[]>([]);
 
   const openNotifications = () => {
-    window.dispatchEvent(new Event("aeitron:close-search"));
-    setOpen(true);
+    onOpenChange(true);
   };
 
   useEffect(() => {
@@ -43,25 +49,11 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") onOpenChange(false);
     };
-    const onClose = () => setOpen(false);
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("aeitron:close-notifications", onClose);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("aeitron:close-notifications", onClose);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [open]);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onOpenChange]);
 
   useEffect(() => {
     const supabase = createClientSupabase();
@@ -124,7 +116,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
         ) : null}
       </button>
       {open ? (
-        <div className="fixed inset-0 z-[110] bg-black/55 px-4 py-5 backdrop-blur-md" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[110] bg-black/55 px-4 py-5 backdrop-blur-md" onClick={() => onOpenChange(false)}>
           <aside
             className="premium-popover ml-auto flex h-full w-full max-w-md flex-col rounded-2xl border border-[var(--line)] bg-[rgba(10,14,24,0.97)] p-4 shadow-2xl backdrop-blur-2xl"
             onClick={(event) => event.stopPropagation()}
@@ -136,7 +128,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
               </div>
               <button
                 className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.04] text-[var(--ink-soft)] transition hover:bg-white/[0.08]"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
                 type="button"
                 aria-label="Close notifications"
               >

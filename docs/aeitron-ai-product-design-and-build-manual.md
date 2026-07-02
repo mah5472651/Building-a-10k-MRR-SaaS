@@ -28,7 +28,7 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 - Button reliability hardening for copy, client-link generation, checkout, send-link email, slot removal, uploads, intake save, signature save, and kickoff booking
 - All decorative/no-op controls are avoided; visible buttons must either perform an action, submit a form, navigate, or be clearly disabled
 - Search and notification overlays use separate fixed modal layers with high z-index, Escape/outside close behavior, and no layout overlap
-- Search and notification are mutually exclusive: opening one dispatches an app event that closes the other, and the open overlay locks body scroll
+- Search and notification are mutually exclusive through `TopbarActions`, a shared client-side parent state. Opening one replaces the other and locks body scroll.
 - Unit tests for validation, client state, paywall behavior, notification events, average completion, and deposit recommendation
 
 ## Premium Visual Direction
