@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BellRing, Download, Mail, Phone, TrendingDown } from "lucide-react";
 import { AgencyShell } from "@/components/agency-shell";
+import { NudgeButton } from "@/components/nudge-button";
 import { RecoveryButton } from "@/components/recovery-button";
 import { defaultAlertRules, getAgencyAnalytics } from "@/lib/analytics";
 import { requireCurrentAgency } from "@/lib/data";
@@ -52,7 +53,7 @@ export default async function AnalyticsPage() {
                   <td className={row.atRisk ? "px-3 py-3 text-[var(--red)]" : "px-3 py-3"}>{row.daysStalled}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-2">
-                      <Link className="btn-secondary grid min-h-8 place-items-center px-3 text-xs" href={`/clients/${row.client.id}`}>Nudge</Link>
+                      <NudgeButton clientId={row.client.id} />
                       <a className="btn-secondary inline-flex min-h-8 items-center gap-2 px-3 text-xs" href={row.client.phone ? `tel:${row.client.phone}` : `/clients/${row.client.id}`}>
                         <Phone size={13} />
                         Call
@@ -135,6 +136,16 @@ export default async function AnalyticsPage() {
                   <div>
                     <p className="text-sm font-medium">{row.client.name ?? "Unnamed client"}</p>
                     <p className="mt-1 text-xs text-[var(--ink-soft)]">{row.reason}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <NudgeButton clientId={row.client.id} />
+                      <a className="btn-secondary inline-flex min-h-8 items-center gap-2 px-3 text-xs" href={row.client.phone ? `tel:${row.client.phone}` : `/clients/${row.client.id}`}>
+                        <Phone size={13} />
+                        Call
+                      </a>
+                      <Link className="btn-secondary inline-flex min-h-8 items-center px-3 text-xs" href={`/clients/${row.client.id}`}>
+                        Open
+                      </Link>
+                    </div>
                   </div>
                   <span className="rounded-full bg-[var(--amber-tint)] px-2 py-1 text-xs text-[var(--amber-100)]">{row.score}</span>
                 </div>
@@ -164,8 +175,17 @@ export default async function AnalyticsPage() {
                 <span className={event.status === "open" ? "text-[var(--amber)]" : "text-[var(--red)]"}>{event.status}</span>
               </div>
               <p className="mt-1 text-xs text-[var(--ink-soft)]">{event.failure_reason ?? "Retry with dunning email"}</p>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <RecoveryButton paymentEventId={event.id} />
+                {event.client?.unique_link_token ? (
+                  <Link
+                    className="btn-secondary inline-flex min-h-8 items-center px-3 text-xs"
+                    href={`/c/${event.client.unique_link_token}/deposit`}
+                    target="_blank"
+                  >
+                    Open retry link
+                  </Link>
+                ) : null}
               </div>
             </div>
           )) : <p className="text-sm text-[var(--ink-soft)]">No failed payment events recorded yet.</p>}

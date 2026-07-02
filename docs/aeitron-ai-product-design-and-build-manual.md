@@ -10,19 +10,21 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 - Agency app: `/dashboard`, `/analytics`, `/clients`, `/clients/[id]`, `/flow`, `/settings`, `/billing`, `/onboarding`
 - Client flow: `/c/[token]`, `/c/[token]/agreement`, `/c/[token]/deposit`, `/c/[token]/kickoff`, `/c/[token]/confirmation`
 - Preview: `/preview/[flowId]`
-- API: client links, client flow save/upload, Stripe checkout/webhooks, payment recovery nudges, notifications, slots, summary, signature record, monthly reports, cron nudges
+- API: client links, client flow save/upload, manual client nudges, Stripe checkout/webhooks, payment recovery nudges, notifications, slots, summary, signature record, monthly reports, cron nudges
 
 ## Built Features
 - Supabase email/password auth, magic link, logout, password reset, and password update
 - First-run agency setup with agency name, optional logo, default questions, deposit amount, and first kickoff slot
 - Agency dashboard with realtime refresh, stats, weekly collected deposits, needs-attention widget, smart deposit recommendation, funnel analytics, recent activity, and client link generation
 - Analytics command center with revenue leak detector, at-risk revenue, potential lost revenue, bottleneck stage heatmap, multi-flow conversion compare, time-to-close breakdown, send-time heatmap, smart follow-up prioritization, cohorts, payment recovery, team performance, custom alert rules, and monthly printable report export
+- Manual client nudge buttons in analytics send a real follow-up email with the client's secure handoff link and record a notification event
 - Client records with progress, answers, signature audit, uploaded files, payment schedule, printable signature record, and printable onboarding summary
 - Flow editor with multiple onboarding flows, active/default flow selection, questions, dropdown options, conditional questions, agreement text, deposit amount, payment milestones, reassurance copy, kickoff slots, and client preview
 - Public client flow with details intake, file upload, typed signature, Stripe deposit checkout or zero-dollar skip, kickoff booking, and confirmation
 - Stripe deposit checkout, SaaS subscription checkout, billing portal, webhook sync, customer sync, invoice payment sync, and paywall for expired trial/subscription
 - Stripe failed deposit/payment-intent and failed subscription invoice events are recorded into a recovery table for agency action
 - Payment recovery panel can send client dunning/retry emails through Resend
+- Payment recovery emails include the real client deposit retry link when the failed Stripe event is tied to a client
 - Realtime notification center, live status badge, online presence count, client/slot/notification realtime refresh
 - Resend transactional email hooks and Zapier/Make outbound webhook URL
 - Stalled client nudge cron and Twilio helper
@@ -130,6 +132,7 @@ Motion tokens and classes in `globals.css`:
 - Stripe buttons should show user-friendly unavailable messages when Stripe is not configured.
 - Route handlers should return JSON errors instead of crashing whenever possible.
 - Recovery actions must keep their own button state and call `/api/recovery/nudge`; they should not depend on notification/search parent state.
+- Manual nudge actions must keep their own button state and call `/api/clients/[id]/nudge`; they should record `manual_nudge` in `notification_events`.
 - Monthly report export returns standalone printable HTML from `/api/reports/monthly` and must not require client-side app state.
 
 ## Analytics And Recovery Suite
@@ -139,7 +142,7 @@ Revenue Leak Detector:
 - Calculates unpaid, incomplete clients using each client's flow deposit/payment schedule value.
 - Flags at-risk rows when the client has stalled for at least 2 days.
 - Shows pending revenue, at-risk revenue, and potential lost revenue this month.
-- Table columns: client name, stage stuck, value, days stalled, and action buttons for nudge/client detail and phone call.
+- Table columns: client name, stage stuck, value, days stalled, and action buttons for real client nudge email and phone call.
 
 Bottleneck Heatmap:
 - Measures drop-off across Intake, Agreement, Deposit, and Kickoff.
@@ -152,7 +155,7 @@ Time-To-Close Analytics:
 
 Smart Follow-up Prioritization:
 - Scores clients with value, stall time, and completion depth.
-- Shows a ranked daily call list with plain-language reasoning, such as deposit page stalls with pending value.
+- Shows a ranked daily call list with plain-language reasoning, direct nudge email, call, and client-detail actions.
 
 Cohorts And Team View:
 - Groups clients by created month and estimates repeat rate from repeated client emails.
@@ -162,11 +165,12 @@ Cohorts And Team View:
 Payment Recovery:
 - Uses `payment_events` to list failed/declined deposit and subscription payment events.
 - Stripe webhooks record `checkout.session.async_payment_failed`, `payment_intent.payment_failed`, and `invoice.payment_failed`.
-- Recovery buttons send dunning/retry emails via Resend and mark the event as open with "Recovery email sent".
+- Recovery buttons send dunning/retry emails via Resend, include `/c/[token]/deposit` when available, and mark the event as open with "Recovery email sent".
 
 Custom Alerts:
 - Agencies configure deposit pending and agreement unsigned thresholds in `/settings`.
 - Rules are stored in `agencies.alert_rules` as JSON and displayed on `/analytics`.
+- `/api/cron/nudges` evaluates enabled alert rules, sends agency alert emails, records `custom_alert_[stage]` notification events, and dedupes alerts per client per day.
 
 Monthly Report Export:
 - `/api/reports/monthly` returns printable HTML with summary revenue, stuck clients, bottlenecks, and priority follow-ups.
@@ -226,6 +230,7 @@ Optional integrations:
 - `src/app/(agency)/analytics/page.tsx`: analytics, revenue leak, bottleneck, recovery, alert, cohort, and report UI
 - `src/app/api/reports/monthly/route.ts`: printable monthly performance report export
 - `src/app/api/recovery/nudge/route.ts`: Resend-powered recovery email endpoint
+- `src/app/api/clients/[id]/nudge/route.ts`: manual client follow-up email endpoint
 - `src/lib/analytics.ts`: agency analytics calculations for revenue, bottlenecks, time-to-close, cohorts, follow-ups, payment events, and team performance
 - `src/lib/data.ts`: agency data, dashboard stats, recommendations, client bundles
 - `src/lib/state.ts`: client progress and paywall helpers

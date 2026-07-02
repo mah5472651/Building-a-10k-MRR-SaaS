@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { appUrl } from "@/lib/env";
 import { requireCurrentAgency } from "@/lib/data";
 import { sendTransactionalEmail } from "@/lib/email";
 import { createServerSupabase, createServiceSupabase } from "@/lib/supabase";
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase();
   const { data: event } = await supabase
     .from("payment_events")
-    .select("*,client:clients(name,email)")
+    .select("*,client:clients(name,email,unique_link_token)")
     .eq("id", String(paymentEventId))
     .eq("agency_id", agency.id)
     .single();
@@ -28,12 +29,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
+  const retryUrl = client.unique_link_token ? `${appUrl}/c/${client.unique_link_token}/deposit` : appUrl;
   await sendTransactionalEmail({
     to: client.email,
     subject: `${agency.name}: payment retry link`,
     html: `
       <p>Hi ${client.name ?? "there"},</p>
-      <p>Your onboarding deposit payment did not go through. Please reopen your Aeitron AI handoff link and retry the deposit step.</p>
+      <p>Your onboarding deposit payment did not go through. Please retry the deposit step using the secure link below.</p>
+      <p><a href="${retryUrl}">Retry your deposit</a></p>
       <p>If you need help, reply to this email and ${agency.name} will follow up.</p>
     `,
   });

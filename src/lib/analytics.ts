@@ -16,7 +16,7 @@ export async function getAgencyAnalytics(agencyId: string) {
     supabase.from("onboarding_flows").select("*").eq("agency_id", agencyId),
     supabase
       .from("payment_events")
-      .select("*,client:clients(name,email)")
+      .select("*,client:clients(name,email,unique_link_token,phone)")
       .eq("agency_id", agencyId)
       .order("created_at", { ascending: false })
       .limit(20),

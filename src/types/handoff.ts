@@ -146,5 +146,5 @@ export type PaymentEvent = {
   provider_event_id: string | null;
   failure_reason: string | null;
   created_at: string;
-  client?: Pick<Client, "name" | "email"> | null;
+  client?: Pick<Client, "name" | "email" | "unique_link_token" | "phone"> | null;
 };
