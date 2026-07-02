@@ -39,7 +39,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
     const supabase = createClientSupabase();
     const channel = supabase
       .channel(`agency-notifications-${agencyId}`, {
-        config: { presence: { key: crypto.randomUUID() } },
+        config: { presence: { key: createPresenceKey() } },
       })
       .on(
         "postgres_changes",
@@ -119,4 +119,12 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
       ) : null}
     </div>
   );
+}
+
+function createPresenceKey() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `presence-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
