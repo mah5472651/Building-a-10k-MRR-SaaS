@@ -25,17 +25,39 @@ export function CommandPalette() {
   const [query, setQuery] = useState("");
   const [clients, setClients] = useState<ClientResult[]>([]);
 
+  const openPalette = () => {
+    window.dispatchEvent(new Event("aeitron:close-notifications"));
+    setOpen(true);
+  };
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setOpen((value) => !value);
+        setOpen((value) => {
+          if (!value) window.dispatchEvent(new Event("aeitron:close-notifications"));
+          return !value;
+        });
       }
       if (event.key === "Escape") setOpen(false);
     };
+    const onClose = () => setOpen(false);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("aeitron:close-search", onClose);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("aeitron:close-search", onClose);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open || clients.length) return;
@@ -78,7 +100,7 @@ export function CommandPalette() {
     <>
       <button
         className="hidden h-10 min-w-[190px] items-center justify-between gap-2 rounded-xl border border-[var(--line)] bg-white/[0.045] px-3 text-sm text-[var(--ink-soft)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08] md:flex"
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         type="button"
       >
         <span className="inline-flex items-center gap-2">

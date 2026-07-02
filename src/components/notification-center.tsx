@@ -23,6 +23,11 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
   const [onlineCount, setOnlineCount] = useState(1);
   const [notifications, setNotifications] = useState<NotificationEvent[]>([]);
 
+  const openNotifications = () => {
+    window.dispatchEvent(new Event("aeitron:close-search"));
+    setOpen(true);
+  };
+
   useEffect(() => {
     let mounted = true;
     fetch("/api/notifications")
@@ -40,9 +45,23 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
+    const onClose = () => setOpen(false);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("aeitron:close-notifications", onClose);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("aeitron:close-notifications", onClose);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   useEffect(() => {
     const supabase = createClientSupabase();
@@ -93,7 +112,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
       </div>
       <button
         className="premium-float relative grid h-10 w-10 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.045] text-[var(--ink-800)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08]"
-        onClick={() => setOpen(true)}
+        onClick={openNotifications}
         type="button"
         aria-label="Notifications"
       >
