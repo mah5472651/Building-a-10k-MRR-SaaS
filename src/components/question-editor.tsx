@@ -6,7 +6,7 @@ import type { IntakeQuestion } from "@/types/handoff";
 
 export function QuestionEditor({ questions }: { questions: IntakeQuestion[] }) {
   const [items, setItems] = useState(
-    questions.length ? questions : [{ id: crypto.randomUUID(), label: "" }],
+    questions.length ? questions : [{ id: createQuestionId(), label: "" }],
   );
 
   const move = (index: number, direction: -1 | 1) => {
@@ -111,11 +111,19 @@ export function QuestionEditor({ questions }: { questions: IntakeQuestion[] }) {
       <button
         className="btn-secondary flex items-center gap-2 px-3 text-sm"
         type="button"
-        onClick={() => setItems([...items, { id: crypto.randomUUID(), label: "" }])}
+        onClick={() => setItems([...items, { id: createQuestionId(), label: "" }])}
       >
         <Plus size={15} />
         Add question
       </button>
     </div>
   );
+}
+
+function createQuestionId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `question-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }

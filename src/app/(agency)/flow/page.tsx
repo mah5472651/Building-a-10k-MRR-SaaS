@@ -101,6 +101,21 @@ async function createFlowAction(formData: FormData) {
   redirect(data ? `/flow?flow=${data.id}` : "/flow");
 }
 
+async function setActiveFlowAction(formData: FormData) {
+  "use server";
+
+  const { agency } = await requireCurrentAgency();
+  const supabase = await createServerSupabase();
+  const flowId = String(formData.get("flow_id") ?? "");
+  await supabase.from("onboarding_flows").update({ active: false }).eq("agency_id", agency.id);
+  await supabase
+    .from("onboarding_flows")
+    .update({ active: true, updated_at: new Date().toISOString() })
+    .eq("agency_id", agency.id)
+    .eq("id", flowId);
+  redirect(`/flow?flow=${flowId}`);
+}
+
 export default async function FlowPage({
   searchParams,
 }: {
@@ -139,6 +154,16 @@ export default async function FlowPage({
             </Link>
           ))}
         </div>
+        <form action={setActiveFlowAction} className="mt-4 flex flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--paper-50)] p-3 md:flex-row md:items-center">
+          <input type="hidden" name="flow_id" value={flow.id} />
+          <div className="flex-1">
+            <p className="text-sm font-medium">{flow.active ? "Default flow" : "Not default yet"}</p>
+            <p className="text-xs text-[var(--ink-soft)]">New client links use the default flow unless you choose another.</p>
+          </div>
+          <button className="btn-secondary text-sm" disabled={flow.active} type="submit">
+            Make default
+          </button>
+        </form>
       </section>
       <form action={saveFlowAction} className="space-y-5">
         <input type="hidden" name="flow_id" value={flow.id} />

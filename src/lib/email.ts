@@ -25,6 +25,7 @@ export function eventSubject(event: string) {
     booked: "A client booked kickoff",
     completed: "Client onboarding is complete",
     stalled: "A client is stalled",
+    link_sent: "A client link was created",
   };
   return subjects[event] ?? "Aeitron AI notification";
 }

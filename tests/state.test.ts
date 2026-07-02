@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { completedStepCount, isSubscriptionUsable, nextClientPath } from "@/lib/state";
+import { getAverageCompletionMinutes, getDepositRecommendation } from "@/lib/data";
 
 const baseClient = {
   name: null,
@@ -39,5 +40,45 @@ describe("subscription state", () => {
     expect(isSubscriptionUsable("trialing", null)).toBe(true);
     expect(isSubscriptionUsable("past_due", "2999-01-01T00:00:00Z")).toBe(true);
     expect(isSubscriptionUsable("canceled", "2000-01-01T00:00:00Z")).toBe(false);
+  });
+});
+
+describe("agency intelligence", () => {
+  it("calculates average completion time", () => {
+    expect(
+      getAverageCompletionMinutes([
+        {
+          ...baseClient,
+          id: "1",
+          agency_id: "a",
+          flow_id: "f",
+          unique_link_token: "t",
+          email: null,
+          phone: null,
+          answers: {},
+          signature_name: null,
+          signature_ip: null,
+          signature_user_agent: null,
+          contract_snapshot: null,
+          stripe_payment_intent_id: null,
+          amount_paid: null,
+          status: "completed",
+          created_at: "2026-07-02T00:00:00Z",
+          updated_at: "2026-07-02T00:05:00Z",
+          last_active_at: null,
+          reminder_24h_sent_at: null,
+          reminder_3d_sent_at: null,
+          name: "Ada",
+          signed_at: "2026-07-02T00:01:00Z",
+          paid_at: "2026-07-02T00:02:00Z",
+          scheduled_at: "2026-07-02T00:05:00Z",
+          meeting_time: "2026-07-02T00:05:00Z",
+        },
+      ]),
+    ).toBe(5);
+  });
+
+  it("shows a useful deposit recommendation fallback", () => {
+    expect(getDepositRecommendation([])).toContain("Collect a few more deposits");
   });
 });

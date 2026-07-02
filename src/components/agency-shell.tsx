@@ -3,6 +3,7 @@ import { LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-
 import { signOutAction } from "@/lib/auth-actions";
 import { Logo } from "./logo";
 import { NotificationCenter } from "./notification-center";
+import { CommandPalette } from "./command-palette";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -86,7 +87,10 @@ export function AgencyShell({
         <div className="agency-page mx-auto max-w-[900px]">
           <div className="mb-6 flex items-center justify-between gap-4">
             <h1 className="serif text-[24px] leading-[30px] font-medium">{title}</h1>
-            {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}
+            <div className="flex items-center gap-2">
+              <CommandPalette />
+              {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}
+            </div>
           </div>
           {children}
         </div>

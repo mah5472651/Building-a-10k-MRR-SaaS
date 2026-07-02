@@ -3,6 +3,7 @@ import { appUrl } from "@/lib/env";
 import { getClientBundleByToken } from "@/lib/data";
 import { createServiceSupabase } from "@/lib/supabase";
 import { getStripe } from "@/lib/stripe";
+import { recordNotificationEvent } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   const { token } = await request.json();
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", bundle.client.id);
+    await recordNotificationEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, event: "paid" });
     return NextResponse.json({ url: `/c/${token}/kickoff` });
   }
 

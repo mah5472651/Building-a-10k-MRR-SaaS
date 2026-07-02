@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from("agencies")
         .update({
+          stripe_customer_id: String(session.customer ?? ""),
           stripe_subscription_id: String(session.subscription ?? ""),
           subscription_status: "active",
           plan: session.metadata.plan ?? "starter",
@@ -84,6 +85,16 @@ export async function POST(request: NextRequest) {
         subscription_status: subscription.status,
       })
       .eq("stripe_customer_id", subscription.customer);
+  }
+
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object;
+    if (invoice.customer) {
+      await supabase
+        .from("agencies")
+        .update({ subscription_status: "active" })
+        .eq("stripe_customer_id", invoice.customer);
+    }
   }
 
   return NextResponse.json({ received: true });

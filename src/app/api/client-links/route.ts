@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { appUrl } from "@/lib/env";
 import { canGenerateClientLink, requireCurrentAgency } from "@/lib/data";
+import { recordNotificationEvent } from "@/lib/notifications";
 import { createServerSupabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
@@ -32,6 +33,8 @@ export async function POST(request: Request) {
   if (error || !data) {
     return NextResponse.json({ error: error?.message ?? "Could not create client link." }, { status: 500 });
   }
+
+  await recordNotificationEvent({ agencyId: agency.id, clientId: data.id, event: "link_sent" });
 
   return NextResponse.json({
     client: data,

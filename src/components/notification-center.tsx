@@ -7,6 +7,7 @@ import { createClientSupabase } from "@/lib/supabase-browser";
 import type { NotificationEvent } from "@/types/handoff";
 
 const labels: Record<string, string> = {
+  link_sent: "Client link created",
   intake_completed: "Intake completed",
   signed: "Agreement signed",
   paid: "Deposit paid",

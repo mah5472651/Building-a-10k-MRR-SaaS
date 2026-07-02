@@ -53,5 +53,5 @@ export const bookingSchema = z.object({
 
 export const notificationSchema = z.object({
   client_id: z.string().uuid(),
-  event: z.enum(["intake_completed", "signed", "paid", "booked", "completed"]),
+  event: z.enum(["link_sent", "intake_completed", "signed", "paid", "booked", "completed", "stalled"]),
 });

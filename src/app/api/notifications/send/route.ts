@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabase } from "@/lib/supabase";
+import { createServerSupabase, createServiceSupabase } from "@/lib/supabase";
 import { requireCurrentAgency } from "@/lib/data";
 import { notificationSchema } from "@/lib/validation";
 import { eventSubject, sendTransactionalEmail } from "@/lib/email";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     html: `<p>${client.name ?? "A client"} triggered ${parsed.data.event}.</p>`,
   });
 
-  await supabase.from("notification_events").insert({
+  await createServiceSupabase().from("notification_events").insert({
     agency_id: agency.id,
     client_id: client.id,
     event: parsed.data.event,
