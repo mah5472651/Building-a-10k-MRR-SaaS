@@ -87,8 +87,46 @@ export async function getDashboardData(agencyId: string) {
       total: rows.length,
       inProgress: rows.filter((client) => client.status === "in_progress").length,
       completed: rows.filter((client) => client.status === "completed").length,
+      weeklyCollected: rows
+        .filter((client) => client.paid_at && new Date(client.paid_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
+        .reduce((sum, client) => sum + Number(client.amount_paid ?? 0), 0),
     },
+    needsAttention: rows.filter((client) => {
+      if (client.status === "completed") return false;
+      const last = new Date(client.last_active_at ?? client.created_at).getTime();
+      return Date.now() - last > 72 * 60 * 60 * 1000;
+    }),
   };
+}
+
+export function getAverageCompletionMinutes(clients: Client[]) {
+  const completed = clients.filter((client) => client.scheduled_at);
+  if (!completed.length) return 4;
+  const minutes = completed.map((client) => {
+    const start = new Date(client.created_at).getTime();
+    const end = new Date(client.scheduled_at ?? client.updated_at).getTime();
+    return Math.max(1, Math.round((end - start) / 60000));
+  });
+  return Math.max(1, Math.round(minutes.reduce((sum, item) => sum + item, 0) / minutes.length));
+}
+
+export function getDepositRecommendation(clients: Client[]) {
+  const paidClients = clients.filter((client) => Number(client.amount_paid ?? 0) > 0);
+  if (paidClients.length < 4) {
+    return "Collect a few more deposits and Aeitron AI will recommend the range clients complete most often.";
+  }
+  const buckets = [
+    { label: "$0-499", min: 0, max: 499 },
+    { label: "$500-750", min: 500, max: 750 },
+    { label: "$751-1000", min: 751, max: 1000 },
+    { label: "$1000+", min: 1001, max: Infinity },
+  ].map((bucket) => {
+    const rows = paidClients.filter((client) => Number(client.amount_paid) >= bucket.min && Number(client.amount_paid) <= bucket.max);
+    const completed = rows.filter((client) => client.status === "completed").length;
+    return { ...bucket, total: rows.length, rate: rows.length ? completed / rows.length : 0 };
+  });
+  const best = buckets.sort((a, b) => b.rate - a.rate)[0];
+  return `Clients in the ${best.label} deposit range complete onboarding most often in your data. Consider testing that range.`;
 }
 
 export async function getClientDetail(clientId: string, agencyId: string) {
@@ -128,7 +166,7 @@ export async function getClientBundleByToken(token: string): Promise<ClientBundl
 
   if (!client) return null;
 
-  const [{ data: agency }, { data: flow }, { data: slots }, { data: files }] = await Promise.all([
+  const [{ data: agency }, { data: flow }, { data: slots }, { data: files }, { data: agencyClients }] = await Promise.all([
     supabase.from("agencies").select("*").eq("id", client.agency_id).single(),
     supabase.from("onboarding_flows").select("*").eq("id", client.flow_id).single(),
     supabase
@@ -142,15 +180,23 @@ export async function getClientBundleByToken(token: string): Promise<ClientBundl
       .select("*")
       .eq("client_id", client.id)
       .order("created_at", { ascending: false }),
+    supabase.from("clients").select("*").eq("agency_id", client.agency_id),
   ]);
 
   if (!agency || !flow) return null;
+  const slotRows = (slots ?? []) as AvailableSlot[];
+  const oneWeekFromNow = Date.now() + 7 * 24 * 60 * 60 * 1000;
   return {
     agency: agency as Agency,
     flow: flow as OnboardingFlow,
     client: client as Client,
-    slots: (slots ?? []) as AvailableSlot[],
+    slots: slotRows,
     files: (files ?? []) as ClientFile[],
+    averageCompletionMinutes: getAverageCompletionMinutes((agencyClients ?? []) as Client[]),
+    openSlotsThisWeek: slotRows.filter((slot) => {
+      const time = new Date(slot.datetime).getTime();
+      return time >= Date.now() && time <= oneWeekFromNow;
+    }).length,
   };
 }
 

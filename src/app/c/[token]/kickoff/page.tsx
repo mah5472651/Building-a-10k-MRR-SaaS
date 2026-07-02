@@ -4,6 +4,7 @@ import { ClientFrame } from "@/components/client-frame";
 import { createServiceSupabase } from "@/lib/supabase";
 import { getClientBundleByToken } from "@/lib/data";
 import { getStripe } from "@/lib/stripe";
+import { sendAgencyWebhook } from "@/lib/webhooks";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,16 @@ export default async function KickoffPage({
           updated_at: new Date().toISOString(),
         })
         .eq("id", bundle.client.id);
+      await sendAgencyWebhook({
+        agency: bundle.agency,
+        event: "paid",
+        client: {
+          ...bundle.client,
+          paid_at: new Date().toISOString(),
+          stripe_payment_intent_id: String(session.payment_intent ?? ""),
+          amount_paid: Number(session.amount_total ?? 0) / 100,
+        },
+      });
       bundle = await getClientBundleByToken(token);
     }
   }
@@ -47,7 +58,16 @@ export default async function KickoffPage({
   if (bundle.client.scheduled_at) redirect(`/c/${token}/confirmation`);
 
   return (
-    <ClientFrame agencyName={bundle.agency.name} logoUrl={bundle.agency.logo_url} client={bundle.client} current="kickoff" title="Choose a kickoff time">
+    <ClientFrame
+      agencyName={bundle.agency.name}
+      logoUrl={bundle.agency.logo_url}
+      client={bundle.client}
+      current="kickoff"
+      title="Choose a kickoff time"
+      reassurance={bundle.flow.reassurance?.kickoff ?? "Pick the slot that gives you the cleanest start."}
+      averageMinutes={bundle.averageCompletionMinutes}
+      openSlotsThisWeek={bundle.openSlotsThisWeek}
+    >
       <BookingForm token={token} slots={bundle.slots} />
     </ClientFrame>
   );

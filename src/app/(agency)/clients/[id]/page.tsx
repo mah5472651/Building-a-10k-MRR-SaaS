@@ -79,6 +79,10 @@ export default async function ClientDetailPage({
               View signature record
             </Link>
           ) : null}
+          <Link className="btn-secondary mt-3 flex items-center justify-center gap-2 text-sm" href={`/api/clients/${client.id}/summary`} target="_blank">
+            <FileText size={15} />
+            View onboarding summary
+          </Link>
         </section>
       </div>
       <section className="card mt-6 p-6">

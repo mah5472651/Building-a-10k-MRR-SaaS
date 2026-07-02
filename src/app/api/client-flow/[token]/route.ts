@@ -3,6 +3,7 @@ import { getClientBundleByToken } from "@/lib/data";
 import { clientDetailsSchema, signatureSchema, bookingSchema } from "@/lib/validation";
 import { createServiceSupabase } from "@/lib/supabase";
 import { sendTransactionalEmail, eventSubject } from "@/lib/email";
+import { sendAgencyWebhook } from "@/lib/webhooks";
 
 export async function GET(
   _request: NextRequest,
@@ -47,6 +48,11 @@ export async function PATCH(
       })
       .eq("id", bundle.client.id);
     await notifyAgency(bundle.agency.email, "intake_completed", parsed.data.name);
+    await sendAgencyWebhook({
+      agency: bundle.agency,
+      event: "intake_completed",
+      client: { ...bundle.client, name: parsed.data.name, email: parsed.data.email, phone: parsed.data.phone, answers: parsed.data.answers },
+    });
     return NextResponse.json({ ok: true, next: `/c/${token}/agreement` });
   }
 
@@ -75,6 +81,11 @@ export async function PATCH(
       })
       .eq("id", bundle.client.id);
     await notifyAgency(bundle.agency.email, "signed", parsed.data.signature_name);
+    await sendAgencyWebhook({
+      agency: bundle.agency,
+      event: "signed",
+      client: { ...bundle.client, signature_name: parsed.data.signature_name, signed_at: new Date().toISOString() },
+    });
     return NextResponse.json({ ok: true, next: `/c/${token}/deposit` });
   }
 
@@ -109,6 +120,19 @@ export async function PATCH(
       .eq("id", bundle.client.id);
 
     await notifyAgency(bundle.agency.email, "booked", bundle.client.name ?? "A client");
+    const completedClient = {
+      ...bundle.client,
+      scheduled_at: slot.datetime,
+      meeting_time: slot.datetime,
+      status: "completed" as const,
+    };
+    await sendAgencyWebhook({ agency: bundle.agency, event: "booked", client: completedClient });
+    await sendAgencyWebhook({ agency: bundle.agency, event: "completed", client: completedClient });
+    await sendTransactionalEmail({
+      to: bundle.agency.email,
+      subject: "Client onboarding summary",
+      html: `<p>${bundle.client.name ?? "A client"} completed onboarding.</p><p>Kickoff: ${new Date(slot.datetime).toLocaleString()}</p><p>Open the client record in Aeitron AI for the full summary.</p>`,
+    });
     if (bundle.client.email) {
       await sendTransactionalEmail({
         to: bundle.client.email,

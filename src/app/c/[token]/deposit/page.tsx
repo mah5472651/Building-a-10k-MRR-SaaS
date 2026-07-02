@@ -18,7 +18,16 @@ export default async function DepositPage({
   if (nextClientPath(token, bundle.client) !== `/c/${token}/deposit`) redirect(nextClientPath(token, bundle.client));
 
   return (
-    <ClientFrame agencyName={bundle.agency.name} logoUrl={bundle.agency.logo_url} client={bundle.client} current="deposit" title="Place the kickoff deposit">
+    <ClientFrame
+      agencyName={bundle.agency.name}
+      logoUrl={bundle.agency.logo_url}
+      client={bundle.client}
+      current="deposit"
+      title="Place the kickoff deposit"
+      reassurance={bundle.flow.reassurance?.deposit ?? "Secure checkout opens in Stripe and returns you here to book kickoff."}
+      averageMinutes={bundle.averageCompletionMinutes}
+      openSlotsThisWeek={bundle.openSlotsThisWeek}
+    >
       <p className="text-sm leading-6 text-[var(--ink-soft)]">
         This deposit confirms the kickoff and will be applied to your project balance.
       </p>

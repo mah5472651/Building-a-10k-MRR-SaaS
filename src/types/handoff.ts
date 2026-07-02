@@ -37,6 +37,7 @@ export type Agency = {
   plan: Plan;
   subscription_status: SubscriptionStatus;
   trial_ends_at: string | null;
+  outbound_webhook_url: string | null;
   created_at: string;
 };
 
@@ -48,6 +49,12 @@ export type OnboardingFlow = {
   contract_text: string;
   deposit_amount: number;
   payment_schedule: PaymentMilestone[];
+  reassurance: {
+    details?: string;
+    agreement?: string;
+    deposit?: string;
+    kickoff?: string;
+  } | null;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -95,6 +102,8 @@ export type ClientBundle = {
   client: Client;
   slots: AvailableSlot[];
   files: ClientFile[];
+  averageCompletionMinutes: number;
+  openSlotsThisWeek: number;
 };
 
 export type ClientFile = {

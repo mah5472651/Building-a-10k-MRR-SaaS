@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceSupabase } from "@/lib/supabase";
 import { getStripe } from "@/lib/stripe";
 import { sendTransactionalEmail } from "@/lib/email";
+import { sendAgencyWebhook } from "@/lib/webhooks";
 
 export async function POST(request: NextRequest) {
   const payload = await request.text();
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
 
       const { data: client } = await supabase
         .from("clients")
-        .select("name,email,agency:agencies(name,email)")
+        .select("*,agency:agencies(*)")
         .eq("id", clientId)
         .single();
       const agency = Array.isArray(client?.agency) ? client.agency[0] : client?.agency;
@@ -45,6 +46,17 @@ export async function POST(request: NextRequest) {
           to: agency.email,
           subject: "A client paid their deposit",
           html: `<p>${client?.name ?? "A client"} paid the onboarding deposit for ${agency.name}.</p>`,
+        });
+      }
+      if (agency && client) {
+        await sendAgencyWebhook({
+          agency,
+          event: "paid",
+          client: {
+            ...client,
+            paid_at: new Date().toISOString(),
+            amount_paid: Number(session.amount_total ?? 0) / 100,
+          },
         });
       }
     }

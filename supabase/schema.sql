@@ -11,6 +11,7 @@ create table public.agencies (
   plan text not null default 'starter',
   subscription_status text not null default 'trialing',
   trial_ends_at timestamptz default (now() + interval '14 days'),
+  outbound_webhook_url text,
   created_at timestamptz not null default now()
 );
 
@@ -30,6 +31,7 @@ create table public.onboarding_flows (
   contract_text text not null,
   deposit_amount numeric(10,2) not null default 0,
   payment_schedule jsonb not null default '[]'::jsonb,
+  reassurance jsonb default '{}'::jsonb,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

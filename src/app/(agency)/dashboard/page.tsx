@@ -1,5 +1,6 @@
 import { appUrl } from "@/lib/env";
-import { getDashboardData, requireCurrentAgency } from "@/lib/data";
+import Link from "next/link";
+import { getDashboardData, getDepositRecommendation, requireCurrentAgency } from "@/lib/data";
 import { ClientRow } from "@/components/client-row";
 import { AgencyShell } from "@/components/agency-shell";
 import { GenerateLinkButton } from "@/components/generate-link-button";
@@ -17,8 +18,9 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const { agency } = await requireCurrentAgency();
-  const { clients, stats, flows } = await getDashboardData(agency.id);
+  const { clients, stats, flows, needsAttention } = await getDashboardData(agency.id);
   const readyLink = params.link ? `${appUrl}/c/${params.link}` : "";
+  const depositRecommendation = getDepositRecommendation(clients);
 
   return (
     <AgencyShell title="Dashboard" active="Dashboard">
@@ -37,6 +39,40 @@ export default async function DashboardPage({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mb-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr_0.9fr]">
+        <section className="card p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="serif text-[19px] font-medium">Needs attention</h2>
+            <span className="rounded-full bg-[var(--amber-tint)] px-2 py-1 text-xs font-medium">{needsAttention.length}</span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {needsAttention.length ? (
+              needsAttention.slice(0, 3).map((client) => (
+                <Link className="block rounded-lg border border-[var(--line)] bg-[var(--paper-50)] p-3 text-sm" href={`/clients/${client.id}`} key={client.id}>
+                  <span className="font-medium">{client.name ?? "Unnamed client"}</span>
+                  <span className="mt-1 block text-xs text-[var(--ink-soft)]">Inactive since {new Date(client.last_active_at ?? client.created_at).toLocaleDateString()}</span>
+                </Link>
+              ))
+            ) : (
+              <p className="text-sm text-[var(--ink-soft)]">No stalled onboarding right now.</p>
+            )}
+          </div>
+        </section>
+        <section className="card p-6">
+          <p className="label">Collected this week</p>
+          <p className="serif mt-2 text-[30px] font-medium">${Number(stats.weeklyCollected).toFixed(2)}</p>
+          <div className="mt-5 flex h-12 items-end gap-1">
+            {[0.25, 0.5, 0.36, 0.76, 0.42, 0.88, 0.64].map((height, index) => (
+              <span className="flex-1 rounded-t bg-[var(--teal)] opacity-80" style={{ height: `${height * 100}%` }} key={index} />
+            ))}
+          </div>
+        </section>
+        <section className="card p-6">
+          <p className="label">Smart deposit insight</p>
+          <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">{depositRecommendation}</p>
+        </section>
       </div>
 
       <section className="card mb-6 p-6">

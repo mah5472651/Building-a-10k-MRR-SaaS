@@ -25,6 +25,12 @@ async function saveFlowAction(formData: FormData) {
         .map((item, index) => ({
           id: typeof item.id === "string" && item.id ? item.id : `question-${index + 1}`,
           label: item.label.trim(),
+          type: ["text", "textarea", "select"].includes(item.type) ? item.type : "textarea",
+          options: Array.isArray(item.options) ? item.options.filter((option: unknown) => typeof option === "string" && option.trim()).slice(0, 6) : [],
+          conditional_on:
+            item.conditional_on?.question_id && item.conditional_on?.equals
+              ? { question_id: String(item.conditional_on.question_id), equals: String(item.conditional_on.equals) }
+              : null,
         }));
     }
   } catch {
@@ -39,6 +45,12 @@ async function saveFlowAction(formData: FormData) {
       contract_text: String(formData.get("contract_text") ?? defaultContractText),
       deposit_amount: Number(formData.get("deposit_amount") ?? 0),
       payment_schedule: parsePaymentSchedule(formData),
+      reassurance: {
+        details: String(formData.get("reassurance_details") ?? ""),
+        agreement: String(formData.get("reassurance_agreement") ?? ""),
+        deposit: String(formData.get("reassurance_deposit") ?? ""),
+        kickoff: String(formData.get("reassurance_kickoff") ?? ""),
+      },
       updated_at: new Date().toISOString(),
     })
     .eq("id", flowId)
@@ -142,6 +154,28 @@ export default async function FlowPage({
         </section>
 
         <section className="card p-6">
+          <h2 className="serif mb-4 text-[19px] font-medium">Step reassurance copy</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="label">Details step</span>
+              <input className="field mt-1" name="reassurance_details" defaultValue={flow.reassurance?.details ?? ""} />
+            </label>
+            <label className="block">
+              <span className="label">Agreement step</span>
+              <input className="field mt-1" name="reassurance_agreement" defaultValue={flow.reassurance?.agreement ?? ""} />
+            </label>
+            <label className="block">
+              <span className="label">Deposit step</span>
+              <input className="field mt-1" name="reassurance_deposit" defaultValue={flow.reassurance?.deposit ?? ""} />
+            </label>
+            <label className="block">
+              <span className="label">Kickoff step</span>
+              <input className="field mt-1" name="reassurance_kickoff" defaultValue={flow.reassurance?.kickoff ?? ""} />
+            </label>
+          </div>
+        </section>
+
+        <section className="card p-6">
           <h2 className="serif mb-4 text-[19px] font-medium">Agreement</h2>
           <textarea className="field min-h-56" name="contract_text" defaultValue={flow.contract_text} />
         </section>
@@ -182,9 +216,14 @@ export default async function FlowPage({
           </div>
         </section>
 
-        <button className="btn-primary w-full md:w-auto md:px-6" type="submit">
-          Save flow
-        </button>
+        <div className="flex flex-col gap-3 md:flex-row">
+          <button className="btn-primary w-full md:w-auto md:px-6" type="submit">
+            Save flow
+          </button>
+          <Link className="btn-secondary grid place-items-center text-sm md:px-6" href={`/preview/${flow.id}`} target="_blank">
+            Preview as client
+          </Link>
+        </div>
       </form>
     </AgencyShell>
   );

@@ -15,7 +15,16 @@ export default async function ConfirmationPage({
   if (!bundle) notFound();
 
   return (
-    <ClientFrame agencyName={bundle.agency.name} logoUrl={bundle.agency.logo_url} client={bundle.client} current="kickoff" title="You are all set">
+    <ClientFrame
+      agencyName={bundle.agency.name}
+      logoUrl={bundle.agency.logo_url}
+      client={bundle.client}
+      current="kickoff"
+      title="You are all set"
+      reassurance="A confirmation has been recorded for the agency."
+      averageMinutes={bundle.averageCompletionMinutes}
+      openSlotsThisWeek={bundle.openSlotsThisWeek}
+    >
       <div className="relative">
         <div className="confirmation-glow" />
         <div className="relative z-10 space-y-3 text-sm">

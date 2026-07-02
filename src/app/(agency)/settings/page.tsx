@@ -17,6 +17,7 @@ async function saveSettingsAction(formData: FormData) {
       name: String(formData.get("name") ?? agency.name),
       logo_url: String(formData.get("logo_url") ?? "") || null,
       brand_color: String(formData.get("brand_color") ?? "") || null,
+      outbound_webhook_url: String(formData.get("outbound_webhook_url") ?? "") || null,
     })
     .eq("id", agency.id);
 
@@ -50,6 +51,18 @@ export default async function SettingsPage({
         <label className="block">
           <span className="label">Brand color</span>
           <input className="field mt-1" name="brand_color" defaultValue={agency.brand_color ?? ""} placeholder="#132420" />
+        </label>
+        <label className="block">
+          <span className="label">Zapier / Make webhook URL</span>
+          <input
+            className="field mt-1"
+            name="outbound_webhook_url"
+            defaultValue={agency.outbound_webhook_url ?? ""}
+            placeholder="https://hooks.zapier.com/..."
+          />
+          <span className="mt-2 block text-xs text-[var(--ink-soft)]">
+            Sends intake, signature, payment, booking, and completion events.
+          </span>
         </label>
         <label className="block">
           <span className="label">Account email</span>
