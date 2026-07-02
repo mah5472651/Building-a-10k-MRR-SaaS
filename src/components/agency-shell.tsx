@@ -2,7 +2,8 @@ import Link from "next/link";
 import { LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
 import { signOutAction } from "@/lib/auth-actions";
 import { Logo } from "./logo";
-import { TopbarActions } from "./topbar-actions";
+import { CommandPalette } from "./command-palette";
+import { NotificationCenter } from "./notification-center";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -92,7 +93,10 @@ export function AgencyShell({
               <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)]">Overview</p>
               <h1 className="text-[26px] leading-[32px] font-semibold">{title}</h1>
             </div>
-            <TopbarActions agencyId={agencyId} />
+            <div className="flex shrink-0 items-center gap-2">
+              <CommandPalette />
+              {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}
+            </div>
           </div>
           {children}
         </div>

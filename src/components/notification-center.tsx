@@ -3,6 +3,7 @@
 import { Bell, Radio, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { createClientSupabase } from "@/lib/supabase-browser";
 import type { NotificationEvent } from "@/types/handoff";
 
@@ -16,44 +17,47 @@ const labels: Record<string, string> = {
   stalled: "Client stalled",
 };
 
-export function NotificationCenter({
-  agencyId,
-  open,
-  onOpenChange,
-}: {
-  agencyId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function NotificationCenter({ agencyId }: { agencyId: string }) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [onlineCount, setOnlineCount] = useState(1);
   const [notifications, setNotifications] = useState<NotificationEvent[]>([]);
 
-  const openNotifications = () => {
-    onOpenChange(true);
-  };
-
   useEffect(() => {
-    let mounted = true;
+    let active = true;
     fetch("/api/notifications")
       .then((response) => response.json())
       .then((data) => {
-        if (mounted) setNotifications(data.notifications ?? []);
+        if (active) setNotifications(data.notifications ?? []);
       })
       .catch(() => undefined);
     return () => {
-      mounted = false;
+      active = false;
     };
   }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOpenChange(false);
+      if (event.key === "Escape") setOpen(false);
     };
+    const onClose = () => setOpen(false);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onOpenChange]);
+    window.addEventListener("aeitron:close-notifications", onClose);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("aeitron:close-notifications", onClose);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   useEffect(() => {
     const supabase = createClientSupabase();
@@ -95,28 +99,14 @@ export function NotificationCenter({
   const unread = notifications.length;
   const statusText = useMemo(() => (status === "live" ? "Live" : status === "connecting" ? "Connecting" : "Offline"), [status]);
 
-  return (
-    <div className="flex items-center gap-2">
-      <div className="hidden items-center gap-2 rounded-full border border-[var(--line)] bg-white/[0.045] px-3 py-2 text-xs font-medium text-[var(--ink-soft)] shadow-sm backdrop-blur-xl sm:flex">
-        <span className={`h-2 w-2 rounded-full ${status === "live" ? "live-dot bg-[var(--teal)]" : "bg-[var(--red)]"}`} />
-        <Radio size={14} />
-        {statusText} · {onlineCount} online
-      </div>
-      <button
-        className="premium-float relative grid h-10 w-10 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.045] text-[var(--ink-800)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08]"
-        onClick={openNotifications}
-        type="button"
-        aria-label="Notifications"
-      >
-        <Bell size={18} />
-        {unread ? (
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--amber-500)] px-1 text-[10px] font-bold text-[var(--ink-900)]">
-            {Math.min(unread, 9)}
-          </span>
-        ) : null}
-      </button>
-      {open ? (
-        <div className="fixed inset-0 z-[110] bg-black/55 px-4 py-5 backdrop-blur-md" onClick={() => onOpenChange(false)}>
+  const openNotifications = () => {
+    window.dispatchEvent(new Event("aeitron:close-search"));
+    setOpen(true);
+  };
+
+  const overlay = open && typeof document !== "undefined"
+    ? createPortal(
+        <div className="fixed inset-0 z-[110] bg-black/55 px-4 py-5 backdrop-blur-md" onClick={() => setOpen(false)}>
           <aside
             className="premium-popover ml-auto flex h-full w-full max-w-md flex-col rounded-2xl border border-[var(--line)] bg-[rgba(10,14,24,0.97)] p-4 shadow-2xl backdrop-blur-2xl"
             onClick={(event) => event.stopPropagation()}
@@ -128,7 +118,7 @@ export function NotificationCenter({
               </div>
               <button
                 className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.04] text-[var(--ink-soft)] transition hover:bg-white/[0.08]"
-                onClick={() => onOpenChange(false)}
+                onClick={() => setOpen(false)}
                 type="button"
                 aria-label="Close notifications"
               >
@@ -154,8 +144,32 @@ export function NotificationCenter({
               )}
             </div>
           </aside>
-        </div>
-      ) : null}
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="hidden items-center gap-2 rounded-full border border-[var(--line)] bg-white/[0.045] px-3 py-2 text-xs font-medium text-[var(--ink-soft)] shadow-sm backdrop-blur-xl sm:flex">
+        <span className={`h-2 w-2 rounded-full ${status === "live" ? "live-dot bg-[var(--teal)]" : "bg-[var(--red)]"}`} />
+        <Radio size={14} />
+        {statusText} · {onlineCount} online
+      </div>
+      <button
+        className="premium-float relative grid h-10 w-10 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.045] text-[var(--ink-800)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08]"
+        onClick={openNotifications}
+        type="button"
+        aria-label="Notifications"
+      >
+        <Bell size={18} />
+        {unread ? (
+          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--amber-500)] px-1 text-[10px] font-bold text-[var(--ink-900)]">
+            {Math.min(unread, 9)}
+          </span>
+        ) : null}
+      </button>
+      {overlay}
     </div>
   );
 }

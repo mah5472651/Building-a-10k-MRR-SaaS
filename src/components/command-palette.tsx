@@ -3,6 +3,7 @@
 import { Search, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 const commands = [
   { type: "Page", label: "Dashboard", href: "/dashboard", hint: "Overview and client link" },
@@ -19,32 +20,31 @@ type ClientResult = {
   status: string;
 };
 
-export function CommandPalette({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function CommandPalette() {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [clients, setClients] = useState<ClientResult[]>([]);
-
-  const openPalette = () => {
-    onOpenChange(true);
-  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        onOpenChange(!open);
+        setOpen((value) => {
+          if (!value) window.dispatchEvent(new Event("aeitron:close-notifications"));
+          return !value;
+        });
       }
-      if (event.key === "Escape") onOpenChange(false);
+      if (event.key === "Escape") setOpen(false);
     };
+    const onClose = () => setOpen(false);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onOpenChange, open]);
+    window.addEventListener("aeitron:close-search", onClose);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("aeitron:close-search", onClose);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open || clients.length) return;
@@ -53,6 +53,15 @@ export function CommandPalette({
       .then((data) => setClients(data.clients ?? []))
       .catch(() => undefined);
   }, [clients.length, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   const results = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -77,28 +86,20 @@ export function CommandPalette({
     return [...pageResults, ...clientResults].slice(0, 12);
   }, [clients, query]);
 
+  const openPalette = () => {
+    window.dispatchEvent(new Event("aeitron:close-notifications"));
+    setOpen(true);
+  };
+
   const closeAndGo = (href: string) => {
-    onOpenChange(false);
+    setOpen(false);
     setQuery("");
     router.push(href);
   };
 
-  return (
-    <>
-      <button
-        className="hidden h-10 min-w-[150px] items-center justify-between gap-2 rounded-xl border border-[var(--line)] bg-white/[0.045] px-3 text-sm text-[var(--ink-soft)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08] md:flex xl:min-w-[210px]"
-        onClick={openPalette}
-        type="button"
-      >
-        <span className="inline-flex items-center gap-2">
-          <Search size={16} />
-          <span className="hidden xl:inline">Search clients, pages</span>
-          <span className="xl:hidden">Search</span>
-        </span>
-        <span className="rounded bg-black/30 px-1.5 py-0.5 text-[11px]">Ctrl K</span>
-      </button>
-      {open ? (
-        <div className="fixed inset-0 z-[100] grid place-items-start bg-black/55 px-4 py-20 backdrop-blur-md" onClick={() => onOpenChange(false)}>
+  const overlay = open && typeof document !== "undefined"
+    ? createPortal(
+        <div className="fixed inset-0 z-[120] grid place-items-start bg-black/55 px-4 py-20 backdrop-blur-md" onClick={() => setOpen(false)}>
           <div
             className="premium-popover mx-auto w-full max-w-xl rounded-2xl border border-[var(--line)] bg-[rgba(10,14,24,0.97)] p-3 shadow-2xl backdrop-blur-2xl"
             onClick={(event) => event.stopPropagation()}
@@ -144,8 +145,26 @@ export function CommandPalette({
               )}
             </div>
           </div>
-        </div>
-      ) : null}
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <>
+      <button
+        className="hidden h-10 min-w-[150px] items-center justify-between gap-2 rounded-xl border border-[var(--line)] bg-white/[0.045] px-3 text-sm text-[var(--ink-soft)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08] md:flex xl:min-w-[210px]"
+        onClick={openPalette}
+        type="button"
+      >
+        <span className="inline-flex items-center gap-2">
+          <Search size={16} />
+          <span className="hidden xl:inline">Search clients, pages</span>
+          <span className="xl:hidden">Search</span>
+        </span>
+        <span className="rounded bg-black/30 px-1.5 py-0.5 text-[11px]">Ctrl K</span>
+      </button>
+      {overlay}
     </>
   );
 }

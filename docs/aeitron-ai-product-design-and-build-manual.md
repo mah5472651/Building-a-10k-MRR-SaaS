@@ -28,7 +28,7 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 - Button reliability hardening for copy, client-link generation, checkout, send-link email, slot removal, uploads, intake save, signature save, and kickoff booking
 - All decorative/no-op controls are avoided; visible buttons must either perform an action, submit a form, navigate, or be clearly disabled
 - Search and notification overlays use separate fixed modal layers with high z-index, Escape/outside close behavior, and no layout overlap
-- Search and notification are mutually exclusive through `TopbarActions`, a shared client-side parent state. Opening one replaces the other and locks body scroll.
+- Search and notification are independent components with separate local state. Their overlays render through `createPortal(document.body)` as fixed body-level surfaces, so they never push page layout downward.
 - Unit tests for validation, client state, paywall behavior, notification events, average completion, and deposit recommendation
 
 ## Premium Visual Direction
@@ -116,7 +116,7 @@ Motion tokens and classes in `globals.css`:
 - File upload must stop early with a friendly message when no file is selected.
 - Buttons that do not perform an action should not be rendered as buttons.
 - Search and notification surfaces must never use small dropdowns that can overlap page cards; use fixed overlays/drawers.
-- Only one topbar overlay may be open at a time.
+- Topbar overlays must not be controlled by a shared parent unless there is a specific product reason. Each overlay owns its state and renders into `document.body`; lightweight app events may close sibling overlays without moving ownership into a parent.
 - Stripe buttons should show user-friendly unavailable messages when Stripe is not configured.
 - Route handlers should return JSON errors instead of crashing whenever possible.
 
