@@ -27,7 +27,7 @@ export function ClientFrame({
   return (
     <main className="min-h-screen bg-[var(--paper)] px-4 py-6">
       <ProgressTitle current={current} />
-      <section className="mx-auto max-w-[640px]">
+      <section className="agency-page mx-auto max-w-[640px]">
         <div className="mb-7 flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             {logoUrl ? (

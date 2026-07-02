@@ -77,13 +77,13 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
 
   return (
     <div className="relative flex items-center gap-2">
-      <div className="hidden items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper-50)] px-3 py-2 text-xs font-medium text-[var(--ink-soft)] sm:flex">
-        <span className={`h-2 w-2 rounded-full ${status === "live" ? "bg-[var(--teal)]" : "bg-[var(--red)]"}`} />
+      <div className="hidden items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper-50)] px-3 py-2 text-xs font-medium text-[var(--ink-soft)] shadow-sm sm:flex">
+        <span className={`h-2 w-2 rounded-full ${status === "live" ? "live-dot bg-[var(--teal)]" : "bg-[var(--red)]"}`} />
         <Radio size={14} />
         {statusText} · {onlineCount} online
       </div>
       <button
-        className="relative grid h-10 w-10 place-items-center rounded-lg border border-[var(--line)] bg-[var(--paper-50)] text-[var(--ink-800)]"
+        className="premium-float relative grid h-10 w-10 place-items-center rounded-lg border border-[var(--line)] bg-[var(--paper-50)] text-[var(--ink-800)] shadow-sm transition hover:border-[var(--ink-800)] hover:bg-[var(--paper-0)]"
         onClick={() => setOpen((value) => !value)}
         type="button"
         aria-label="Notifications"
@@ -96,7 +96,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 top-12 z-50 w-[min(340px,calc(100vw-2rem))] rounded-xl border border-[var(--line)] bg-[var(--paper-0)] p-3 shadow-xl">
+        <div className="premium-popover absolute right-0 top-12 z-50 w-[min(340px,calc(100vw-2rem))] rounded-xl border border-[var(--line)] bg-[var(--paper-0)] p-3 shadow-xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="label">Live notifications</p>
             <span className="text-xs text-[var(--ink-soft)]">{statusText}</span>
@@ -104,7 +104,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
           <div className="max-h-80 space-y-2 overflow-auto">
             {notifications.length ? (
               notifications.map((item) => (
-                <div className="rounded-lg border border-[var(--line)] bg-[var(--paper-50)] p-3 text-sm" key={item.id}>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--paper-50)] p-3 text-sm transition hover:border-[var(--ink-200)] hover:bg-[var(--paper-0)]" key={item.id}>
                   <p className="font-medium">{labels[item.event] ?? item.event}</p>
                   <p className="mt-1 text-xs text-[var(--ink-soft)]">
                     {item.client?.name ?? "Client"} · {new Date(item.created_at).toLocaleString()}

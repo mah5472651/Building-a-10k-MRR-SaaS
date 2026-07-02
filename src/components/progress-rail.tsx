@@ -16,9 +16,9 @@ export function ProgressRail({
   return (
     <div className="mb-8 pt-4">
       <div className="relative px-[11px]">
-        <div className="absolute left-0 top-[9px] h-1 w-full rounded-full bg-[var(--ink-100)]" />
+        <div className="absolute left-0 top-[9px] h-1 w-full rounded-full bg-[var(--ink-100)] shadow-inner" />
         <div
-          className="absolute left-0 top-[9px] h-1 rounded-full bg-[var(--amber-500)] transition-[width] duration-[600ms] ease-[cubic-bezier(0.65,0,0.35,1)]"
+          className="absolute left-0 top-[9px] h-1 rounded-full bg-[var(--amber-500)] shadow-[0_0_18px_rgba(217,123,41,0.35)] transition-[width] duration-[600ms] ease-[cubic-bezier(0.65,0,0.35,1)]"
           style={{ width: fill }}
         />
         <div className="relative flex justify-between">
@@ -32,7 +32,7 @@ export function ProgressRail({
                     <span className="absolute inset-0 rounded-full bg-[var(--ink-800)] [animation:pulse-ring_2s_ease-in-out_infinite]" />
                   ) : null}
                   <div
-                    className={`relative z-10 grid h-[22px] w-[22px] place-items-center rounded-full border-2 border-[var(--paper-100)] text-[10px] font-semibold ring-1 ${
+                    className={`relative z-10 grid h-[22px] w-[22px] place-items-center rounded-full border-2 border-[var(--paper-100)] text-[10px] font-semibold shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 ${
                       done
                         ? "bg-[var(--amber-500)] text-white ring-[var(--amber-500)] [animation:rail-dot-pop_300ms_ease-out]"
                         : active

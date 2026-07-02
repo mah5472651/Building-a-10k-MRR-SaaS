@@ -45,10 +45,17 @@ export function GenerateLinkButton({ flows = [] }: { flows?: OnboardingFlow[] })
           router.refresh();
         }}
       >
-        {loading ? "Generating..." : "Generate new client link"}
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--amber-100)]" />
+            Generating...
+          </span>
+        ) : (
+          "Generate new client link"
+        )}
       </button>
       {url ? (
-        <div className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white p-3 font-mono text-xs">
+        <div className="handoff-step-card rounded-lg border border-dashed border-[var(--line-strong)] bg-white p-3 font-mono text-xs shadow-sm">
           {url}
         </div>
       ) : null}

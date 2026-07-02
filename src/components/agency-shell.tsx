@@ -36,7 +36,7 @@ export function AgencyShell({
           className="h-10 w-10 rounded-lg border border-[#31423d] object-cover lg:hidden"
         />
         <nav className="mt-7 flex flex-col gap-1">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const Icon = item.icon;
             const selected = active === item.label;
             return (
@@ -44,11 +44,12 @@ export function AgencyShell({
                 key={item.href}
                 href={item.href}
                 title={item.label}
+                style={{ animationDelay: `${index * 45}ms` }}
                 className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   selected
                     ? "text-[var(--paper-0)]"
                     : "text-[#8A9A93] hover:text-[var(--paper-0)]"
-                }`}
+                } nav-item`}
               >
                 {selected ? <span className="absolute left-0 h-5 w-[3px] rounded-full bg-[var(--amber-500)]" /> : null}
                 <Icon size={20} />
@@ -82,7 +83,7 @@ export function AgencyShell({
         })}
       </nav>
       <main className="flex-1 px-4 py-10 md:ml-16 md:px-8 md:py-14 lg:ml-[240px]">
-        <div className="mx-auto max-w-[900px]">
+        <div className="agency-page mx-auto max-w-[900px]">
           <div className="mb-6 flex items-center justify-between gap-4">
             <h1 className="serif text-[24px] leading-[30px] font-medium">{title}</h1>
             {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}
