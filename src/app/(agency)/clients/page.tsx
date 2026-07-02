@@ -12,7 +12,7 @@ export default async function ClientsPage() {
   const { clients, flows } = await getDashboardData(agency.id);
 
   return (
-    <AgencyShell title="Clients" active="Clients">
+    <AgencyShell title="Clients" active="Clients" agencyId={agency.id}>
       <RealtimeRefresh agencyId={agency.id} />
       <section className="card p-6">
         <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">

@@ -114,7 +114,7 @@ export default async function FlowPage({
   if (!flow) redirect("/onboarding");
 
   return (
-    <AgencyShell title="Onboarding flow" active="Onboarding flow">
+    <AgencyShell title="Onboarding flow" active="Onboarding flow" agencyId={agency.id}>
       <section className="card mb-5 p-6">
         <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center">
           <div>

@@ -23,7 +23,7 @@ export default async function DashboardPage({
   const depositRecommendation = getDepositRecommendation(clients);
 
   return (
-    <AgencyShell title="Dashboard" active="Dashboard">
+    <AgencyShell title="Dashboard" active="Dashboard" agencyId={agency.id}>
       <RealtimeRefresh agencyId={agency.id} />
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         {[

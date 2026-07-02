@@ -143,4 +143,11 @@ begin
   ) then
     alter publication supabase_realtime add table public.available_slots;
   end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'notification_events'
+  ) then
+    alter publication supabase_realtime add table public.notification_events;
+  end if;
 end $$;

@@ -4,6 +4,7 @@ import { clientDetailsSchema, signatureSchema, bookingSchema } from "@/lib/valid
 import { createServiceSupabase } from "@/lib/supabase";
 import { sendTransactionalEmail, eventSubject } from "@/lib/email";
 import { sendAgencyWebhook } from "@/lib/webhooks";
+import { recordNotificationEvent } from "@/lib/notifications";
 
 export async function GET(
   _request: NextRequest,
@@ -48,6 +49,7 @@ export async function PATCH(
       })
       .eq("id", bundle.client.id);
     await notifyAgency(bundle.agency.email, "intake_completed", parsed.data.name);
+    await recordNotificationEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, event: "intake_completed" });
     await sendAgencyWebhook({
       agency: bundle.agency,
       event: "intake_completed",
@@ -81,6 +83,7 @@ export async function PATCH(
       })
       .eq("id", bundle.client.id);
     await notifyAgency(bundle.agency.email, "signed", parsed.data.signature_name);
+    await recordNotificationEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, event: "signed" });
     await sendAgencyWebhook({
       agency: bundle.agency,
       event: "signed",
@@ -120,6 +123,8 @@ export async function PATCH(
       .eq("id", bundle.client.id);
 
     await notifyAgency(bundle.agency.email, "booked", bundle.client.name ?? "A client");
+    await recordNotificationEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, event: "booked" });
+    await recordNotificationEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, event: "completed" });
     const completedClient = {
       ...bundle.client,
       scheduled_at: slot.datetime,

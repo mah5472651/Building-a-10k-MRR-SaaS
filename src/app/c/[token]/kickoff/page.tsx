@@ -5,6 +5,7 @@ import { createServiceSupabase } from "@/lib/supabase";
 import { getClientBundleByToken } from "@/lib/data";
 import { getStripe } from "@/lib/stripe";
 import { sendAgencyWebhook } from "@/lib/webhooks";
+import { recordNotificationEvent } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,7 @@ export default async function KickoffPage({
           amount_paid: Number(session.amount_total ?? 0) / 100,
         },
       });
+      await recordNotificationEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, event: "paid" });
       bundle = await getClientBundleByToken(token);
     }
   }

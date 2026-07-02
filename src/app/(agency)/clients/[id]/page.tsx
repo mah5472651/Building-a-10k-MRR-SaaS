@@ -25,7 +25,7 @@ export default async function ClientDetailPage({
   const clientUrl = `${appUrl}/c/${client.unique_link_token}`;
 
   return (
-    <AgencyShell title={client.name ?? "Client detail"} active="Clients">
+    <AgencyShell title={client.name ?? "Client detail"} active="Clients" agencyId={agency.id}>
       <Link href="/dashboard#clients" className="mb-5 inline-block text-sm text-[var(--ink-soft)]">
         Back to clients
       </Link>

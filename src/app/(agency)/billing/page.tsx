@@ -15,7 +15,7 @@ export default async function BillingPage() {
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY);
 
   return (
-    <AgencyShell title="Billing" active="Billing">
+    <AgencyShell title="Billing" active="Billing" agencyId={agency.id}>
       {!stripeConfigured ? (
         <p className="mb-5 rounded-lg bg-[var(--amber-tint)] px-4 py-3 text-sm text-[var(--amber-deep)]">
           Stripe is not configured yet. Add Stripe keys and price IDs to enable real subscription checkout.

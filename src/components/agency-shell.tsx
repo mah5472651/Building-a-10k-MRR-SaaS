@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
 import { signOutAction } from "@/lib/auth-actions";
 import { Logo } from "./logo";
+import { NotificationCenter } from "./notification-center";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -14,10 +15,12 @@ const navItems = [
 export function AgencyShell({
   title,
   active,
+  agencyId,
   children,
 }: {
   title: string;
   active: string;
+  agencyId?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -80,7 +83,10 @@ export function AgencyShell({
       </nav>
       <main className="flex-1 px-4 py-10 md:ml-16 md:px-8 md:py-14 lg:ml-[240px]">
         <div className="mx-auto max-w-[900px]">
-          <h1 className="serif mb-6 text-[24px] leading-[30px] font-medium">{title}</h1>
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <h1 className="serif text-[24px] leading-[30px] font-medium">{title}</h1>
+            {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}
+          </div>
           {children}
         </div>
       </main>

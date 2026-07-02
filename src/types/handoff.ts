@@ -116,3 +116,13 @@ export type ClientFile = {
   mime_type: string | null;
   created_at: string;
 };
+
+export type NotificationEvent = {
+  id: string;
+  agency_id: string;
+  client_id: string | null;
+  event: string;
+  sent_at: string | null;
+  created_at: string;
+  client?: Pick<Client, "name" | "email"> | null;
+};

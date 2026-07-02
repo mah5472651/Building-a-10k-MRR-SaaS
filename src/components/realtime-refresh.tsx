@@ -31,6 +31,16 @@ export function RealtimeRefresh({ agencyId }: { agencyId: string }) {
         },
         () => router.refresh(),
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notification_events",
+          filter: `agency_id=eq.${agencyId}`,
+        },
+        () => router.refresh(),
+      )
       .subscribe();
 
     return () => {

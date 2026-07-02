@@ -3,6 +3,7 @@ import { createServiceSupabase } from "@/lib/supabase";
 import { getStripe } from "@/lib/stripe";
 import { sendTransactionalEmail } from "@/lib/email";
 import { sendAgencyWebhook } from "@/lib/webhooks";
+import { recordNotificationEvent } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   const payload = await request.text();
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
         });
       }
       if (agency && client) {
+        await recordNotificationEvent({ agencyId: agency.id, clientId, event: "paid" });
         await sendAgencyWebhook({
           agency,
           event: "paid",

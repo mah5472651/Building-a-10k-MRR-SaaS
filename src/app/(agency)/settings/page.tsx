@@ -32,7 +32,7 @@ export default async function SettingsPage({
   const params = await searchParams;
   const { agency, email } = await requireCurrentAgency();
   return (
-    <AgencyShell title="Settings" active="Settings">
+    <AgencyShell title="Settings" active="Settings" agencyId={agency.id}>
       {params.error ? (
         <p className="mb-4 rounded-lg bg-[var(--red-tint)] px-3 py-2 text-sm text-[var(--red)]">{params.error}</p>
       ) : null}
