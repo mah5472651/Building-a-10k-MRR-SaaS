@@ -26,12 +26,9 @@ export function AgencyShell({
 }) {
   return (
     <div className="premium-shell min-h-screen pb-20 text-[var(--ink-800)] md:flex md:pb-0">
-      <aside className="glass-sidebar hidden px-3 py-5 text-[var(--ink-800)] md:fixed md:inset-y-0 md:left-0 md:flex md:w-16 md:flex-col lg:w-[260px]">
+      <aside className="glass-sidebar hidden px-3 py-5 text-[var(--ink-800)] md:fixed md:inset-y-0 md:left-0 md:flex md:w-16 md:flex-col lg:w-[224px]">
         <div className="hidden items-center justify-between px-2 lg:flex">
           <Logo />
-          <span className="rounded-full border border-[var(--line)] bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
-            Live
-          </span>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -39,7 +36,18 @@ export function AgencyShell({
           alt=""
           className="h-10 w-10 rounded-xl border border-[var(--line)] object-cover shadow-lg lg:hidden"
         />
-        <nav className="mt-7 flex flex-col gap-1">
+        <div className="mt-7 hidden rounded-2xl border border-[var(--line)] bg-white/[0.045] p-2 lg:block">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--violet-600)] text-xs font-bold shadow-[0_0_24px_rgba(124,61,255,0.45)]">
+              AI
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">Agency Admin</p>
+              <p className="truncate text-[11px] text-[var(--ink-soft)]">Aeitron workspace</p>
+            </div>
+          </div>
+        </div>
+        <nav className="mt-7 flex flex-col gap-1 lg:mt-6">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const selected = active === item.label;
@@ -49,7 +57,7 @@ export function AgencyShell({
                 href={item.href}
                 title={item.label}
                 style={{ animationDelay: `${index * 45}ms` }}
-                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors ${
                   selected
                     ? "nav-active-glow text-[var(--ink-900)]"
                     : "text-[#8A9A93] hover:text-[var(--paper-0)]"
@@ -62,7 +70,14 @@ export function AgencyShell({
             );
           })}
         </nav>
-        <form action={signOutAction} className="mt-auto hidden lg:block">
+        <div className="mt-auto hidden rounded-2xl border border-[var(--line)] bg-[linear-gradient(135deg,rgba(124,61,255,0.25),rgba(255,255,255,0.04),rgba(255,177,74,0.16))] p-3 lg:block">
+          <p className="text-xs font-medium">Trial period active</p>
+          <p className="mt-1 text-[11px] text-[var(--ink-soft)]">Upgrade to unlock production billing limits.</p>
+          <Link href="/billing" className="mt-3 grid h-9 place-items-center rounded-xl bg-white/10 text-xs font-semibold text-[var(--ink-900)]">
+            Upgrade Plan
+          </Link>
+        </div>
+        <form action={signOutAction} className="mt-3 hidden lg:block">
           <button className="w-full rounded-xl border border-[var(--line)] bg-white/5 px-3 py-2 text-sm font-medium text-[#8A9A93] transition-colors hover:border-[var(--amber-100)] hover:text-[var(--paper-0)]" type="submit">
             Logout
           </button>
@@ -86,8 +101,8 @@ export function AgencyShell({
           );
         })}
       </nav>
-      <main className="flex-1 px-4 py-8 md:ml-16 md:px-8 md:py-10 lg:ml-[260px]">
-        <div className="agency-page mx-auto max-w-[1120px]">
+      <main className="flex-1 px-4 py-8 md:ml-16 md:px-7 md:py-8 lg:ml-[224px]">
+        <div className="agency-page mx-auto max-w-[1180px]">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)]">Overview</p>

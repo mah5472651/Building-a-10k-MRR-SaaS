@@ -40,6 +40,7 @@ The app uses a dark, premium financial-command-center visual style inspired by g
 - Amber highlights for primary actions and progress
 - Neon teal for live/completed states
 - Soft shadows, blur, glows, and restrained motion
+- Compact security-console composition inspired by Orca-style dashboards: profile sidebar, purple active nav, four metric cards, heatmap, map panel, exposure list, and results table
 
 ## Color Tokens
 Primary colors in `src/app/globals.css`:
@@ -60,6 +61,7 @@ Primary colors in `src/app/globals.css`:
 - `--red-500`: `#ff4d62` error/danger
 - `--red-tint`: `rgba(255, 77, 98, 0.12)` error badge background
 - `--violet-500`: `#8d7cff` focus/premium glow
+- `--violet-600`: `#7c3dff` active navigation and heatmap intensity
 - `--blue-500`: `#5b8cff` chart gradient
 
 ## Fonts
@@ -102,6 +104,9 @@ Motion tokens and classes in `globals.css`:
 - Secondary buttons: transparent glass, subtle border, hover lift
 - Fields: dark background, 12px radius, violet focus ring and glow
 - Cards: glass background, 18px radius, top-left highlight, hover lift
+- Console panels: `.console-panel` for dense dashboard surfaces
+- Metric cards: `.metric-card` for the four top dashboard counters
+- Heatmap cells: `.heat-cell` and `.map-dot` for visual analytics panels
 - Sidebar: frosted dark glass, selected nav glow, amber active rail
 - Notification bell: floating motion, realtime pulse, dark glass popover
 - Search: Ctrl+K opens a full command palette that searches core pages and client records by name/email/status
