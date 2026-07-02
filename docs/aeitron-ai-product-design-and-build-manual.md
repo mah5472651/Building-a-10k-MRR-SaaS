@@ -7,19 +7,22 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 
 ## Core Routes
 - Agency auth: `/login`, `/signup`, `/forgot-password`, `/auth/callback`
-- Agency app: `/dashboard`, `/clients`, `/clients/[id]`, `/flow`, `/settings`, `/billing`, `/onboarding`
+- Agency app: `/dashboard`, `/analytics`, `/clients`, `/clients/[id]`, `/flow`, `/settings`, `/billing`, `/onboarding`
 - Client flow: `/c/[token]`, `/c/[token]/agreement`, `/c/[token]/deposit`, `/c/[token]/kickoff`, `/c/[token]/confirmation`
 - Preview: `/preview/[flowId]`
-- API: client links, client flow save/upload, Stripe checkout/webhooks, notifications, slots, summary, signature record, cron nudges
+- API: client links, client flow save/upload, Stripe checkout/webhooks, payment recovery nudges, notifications, slots, summary, signature record, monthly reports, cron nudges
 
 ## Built Features
 - Supabase email/password auth, magic link, logout, password reset, and password update
 - First-run agency setup with agency name, optional logo, default questions, deposit amount, and first kickoff slot
 - Agency dashboard with realtime refresh, stats, weekly collected deposits, needs-attention widget, smart deposit recommendation, funnel analytics, recent activity, and client link generation
+- Analytics command center with revenue leak detector, at-risk revenue, potential lost revenue, bottleneck stage heatmap, multi-flow conversion compare, time-to-close breakdown, send-time heatmap, smart follow-up prioritization, cohorts, payment recovery, team performance, custom alert rules, and monthly printable report export
 - Client records with progress, answers, signature audit, uploaded files, payment schedule, printable signature record, and printable onboarding summary
 - Flow editor with multiple onboarding flows, active/default flow selection, questions, dropdown options, conditional questions, agreement text, deposit amount, payment milestones, reassurance copy, kickoff slots, and client preview
 - Public client flow with details intake, file upload, typed signature, Stripe deposit checkout or zero-dollar skip, kickoff booking, and confirmation
 - Stripe deposit checkout, SaaS subscription checkout, billing portal, webhook sync, customer sync, invoice payment sync, and paywall for expired trial/subscription
+- Stripe failed deposit/payment-intent and failed subscription invoice events are recorded into a recovery table for agency action
+- Payment recovery panel can send client dunning/retry emails through Resend
 - Realtime notification center, live status badge, online presence count, client/slot/notification realtime refresh
 - Resend transactional email hooks and Zapier/Make outbound webhook URL
 - Stalled client nudge cron and Twilio helper
@@ -41,6 +44,7 @@ The app uses a dark, premium financial-command-center visual style inspired by g
 - Neon teal for live/completed states
 - Soft shadows, blur, glows, and restrained motion
 - Compact security-console composition inspired by Orca-style dashboards: profile sidebar, purple active nav, four metric cards, heatmap, map panel, exposure list, and results table
+- Analytics screens keep the same compact security-console language: small dense cards, glowing heat cells, bordered tables, dark recovery panels, and printable light report output for business sharing
 
 ## Color Tokens
 Primary colors in `src/app/globals.css`:
@@ -79,9 +83,9 @@ Fonts are loaded in `src/app/layout.tsx` from Google Fonts:
 
 ## Layout System
 - Agency app uses `AgencyShell`
-- Desktop sidebar width: 260px
+- Desktop sidebar width: 224px
 - Mobile nav: fixed bottom glass bar
-- Main content max width: 1120px
+- Main content max width: 1180px
 - Cards use 18px radius, translucent dark background, blur, border, shadow, and hover lift
 - Client flow max width: 640px
 - Repeated panels should use `.card`; nested cards should be avoided except small inline panels
@@ -110,6 +114,7 @@ Motion tokens and classes in `globals.css`:
 - Sidebar: frosted dark glass, selected nav glow, amber active rail
 - Notification bell: floating motion, realtime pulse, dark glass popover
 - Search: Ctrl+K opens a full command palette that searches core pages and client records by name/email/status
+- Analytics nav item uses a chart icon and opens the revenue/recovery command center
 - Status badges: bordered translucent pills with colored dots
 - Progress rail: amber glowing fill, pulsing active step, checked completed dots
 
@@ -124,6 +129,48 @@ Motion tokens and classes in `globals.css`:
 - Topbar overlays must not be controlled by a shared parent unless there is a specific product reason. Each overlay owns its state and renders into `document.body`; lightweight app events may close sibling overlays without moving ownership into a parent.
 - Stripe buttons should show user-friendly unavailable messages when Stripe is not configured.
 - Route handlers should return JSON errors instead of crashing whenever possible.
+- Recovery actions must keep their own button state and call `/api/recovery/nudge`; they should not depend on notification/search parent state.
+- Monthly report export returns standalone printable HTML from `/api/reports/monthly` and must not require client-side app state.
+
+## Analytics And Recovery Suite
+The `/analytics` page is the agency owner cockpit for deciding where money is stuck and what action to take next.
+
+Revenue Leak Detector:
+- Calculates unpaid, incomplete clients using each client's flow deposit/payment schedule value.
+- Flags at-risk rows when the client has stalled for at least 2 days.
+- Shows pending revenue, at-risk revenue, and potential lost revenue this month.
+- Table columns: client name, stage stuck, value, days stalled, and action buttons for nudge/client detail and phone call.
+
+Bottleneck Heatmap:
+- Measures drop-off across Intake, Agreement, Deposit, and Kickoff.
+- Shows percentage drop between stages with violet-to-red bars.
+- Highlights the worst stage and suggests agreement copy simplification when agreement drop-off is high.
+
+Time-To-Close Analytics:
+- Shows average hours from created-to-signed, signed-to-paid, paid-to-booked, and created-to-booked.
+- Includes a weekday/time-of-day heatmap using client link creation time to reveal stronger send windows.
+
+Smart Follow-up Prioritization:
+- Scores clients with value, stall time, and completion depth.
+- Shows a ranked daily call list with plain-language reasoning, such as deposit page stalls with pending value.
+
+Cohorts And Team View:
+- Groups clients by created month and estimates repeat rate from repeated client emails.
+- Shows lifetime value per cohort from collected amounts.
+- V1 team performance shows the agency owner as the single team member; the structure is ready for future multi-user agencies.
+
+Payment Recovery:
+- Uses `payment_events` to list failed/declined deposit and subscription payment events.
+- Stripe webhooks record `checkout.session.async_payment_failed`, `payment_intent.payment_failed`, and `invoice.payment_failed`.
+- Recovery buttons send dunning/retry emails via Resend and mark the event as open with "Recovery email sent".
+
+Custom Alerts:
+- Agencies configure deposit pending and agreement unsigned thresholds in `/settings`.
+- Rules are stored in `agencies.alert_rules` as JSON and displayed on `/analytics`.
+
+Monthly Report Export:
+- `/api/reports/monthly` returns printable HTML with summary revenue, stuck clients, bottlenecks, and priority follow-ups.
+- The browser print dialog can save the report as PDF.
 
 ## Database Tables
 Supabase tables:
@@ -134,6 +181,7 @@ Supabase tables:
 - `available_slots`
 - `notification_events`
 - `client_files`
+- `payment_events`
 
 RLS protects agency-owned data. Public client token routes use server-side API handlers and service role where needed.
 
@@ -144,6 +192,7 @@ Migration files:
 - `supabase/003_advanced_features.sql`: files, milestones, reminders, storage
 - `supabase/004_round2_features.sql`: outbound webhook URL, reassurance copy, paid index
 - `supabase/005_realtime_notifications.sql`: notification realtime publication and index
+- `supabase/006_analytics_recovery.sql`: agency alert rules JSON, payment recovery events table, RLS, and recovery indexes
 
 ## Environment Variables
 Required:
@@ -173,6 +222,11 @@ Optional integrations:
 - `src/components/notification-center.tsx`: realtime notifications and presence
 - `src/components/command-palette.tsx`: Ctrl+K navigation
 - `src/components/client-pipeline.tsx`: clients card/table switcher
+- `src/components/recovery-button.tsx`: payment recovery retry/dunning action button
+- `src/app/(agency)/analytics/page.tsx`: analytics, revenue leak, bottleneck, recovery, alert, cohort, and report UI
+- `src/app/api/reports/monthly/route.ts`: printable monthly performance report export
+- `src/app/api/recovery/nudge/route.ts`: Resend-powered recovery email endpoint
+- `src/lib/analytics.ts`: agency analytics calculations for revenue, bottlenecks, time-to-close, cohorts, follow-ups, payment events, and team performance
 - `src/lib/data.ts`: agency data, dashboard stats, recommendations, client bundles
 - `src/lib/state.ts`: client progress and paywall helpers
 - `src/lib/notifications.ts`: notification event recording

@@ -76,6 +76,36 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  if (event.type === "checkout.session.async_payment_failed") {
+    const session = event.data.object;
+    if (session.metadata?.kind === "client_deposit" && session.metadata.agency_id) {
+      await supabase.from("payment_events").insert({
+        agency_id: session.metadata.agency_id,
+        client_id: session.metadata.client_id ?? null,
+        kind: "deposit",
+        status: "failed",
+        amount: Number(session.amount_total ?? 0) / 100,
+        provider_event_id: event.id,
+        failure_reason: "Checkout payment failed",
+      });
+    }
+  }
+
+  if (event.type === "payment_intent.payment_failed") {
+    const paymentIntent = event.data.object;
+    if (paymentIntent.metadata?.kind === "client_deposit" && paymentIntent.metadata.agency_id) {
+      await supabase.from("payment_events").insert({
+        agency_id: paymentIntent.metadata.agency_id,
+        client_id: paymentIntent.metadata.client_id ?? null,
+        kind: "deposit",
+        status: "declined",
+        amount: Number(paymentIntent.amount ?? 0) / 100,
+        provider_event_id: event.id,
+        failure_reason: paymentIntent.last_payment_error?.message ?? "Card payment failed",
+      });
+    }
+  }
+
   if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
     const subscription = event.data.object;
     await supabase
@@ -94,6 +124,29 @@ export async function POST(request: NextRequest) {
         .from("agencies")
         .update({ subscription_status: "active" })
         .eq("stripe_customer_id", invoice.customer);
+    }
+  }
+
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object;
+    if (invoice.customer) {
+      const { data: agency } = await supabase
+        .from("agencies")
+        .select("id")
+        .eq("stripe_customer_id", invoice.customer)
+        .single();
+
+      if (agency?.id) {
+        await supabase.from("payment_events").insert({
+          agency_id: agency.id,
+          client_id: null,
+          kind: "subscription",
+          status: "failed",
+          amount: Number(invoice.amount_due ?? 0) / 100,
+          provider_event_id: event.id,
+          failure_reason: "Subscription invoice payment failed",
+        });
+      }
     }
   }
 

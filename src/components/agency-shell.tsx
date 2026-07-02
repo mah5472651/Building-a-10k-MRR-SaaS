@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
+import { BarChart3, LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
 import { signOutAction } from "@/lib/auth-actions";
 import { Logo } from "./logo";
 import { CommandPalette } from "./command-palette";
@@ -8,6 +8,7 @@ import { NotificationCenter } from "./notification-center";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/flow", label: "Onboarding flow", icon: Workflow },
   { href: "/billing", label: "Billing", icon: WalletCards },
   { href: "/settings", label: "Settings", icon: Settings },

@@ -38,7 +38,16 @@ export type Agency = {
   subscription_status: SubscriptionStatus;
   trial_ends_at: string | null;
   outbound_webhook_url: string | null;
+  alert_rules: AlertRule[] | null;
   created_at: string;
+};
+
+export type AlertRule = {
+  id: string;
+  name: string;
+  stage: "details" | "agreement" | "deposit" | "kickoff";
+  threshold_hours: number;
+  enabled: boolean;
 };
 
 export type OnboardingFlow = {
@@ -123,6 +132,19 @@ export type NotificationEvent = {
   client_id: string | null;
   event: string;
   sent_at: string | null;
+  created_at: string;
+  client?: Pick<Client, "name" | "email"> | null;
+};
+
+export type PaymentEvent = {
+  id: string;
+  agency_id: string;
+  client_id: string | null;
+  kind: "deposit" | "subscription";
+  status: "failed" | "declined" | "recovered" | "open";
+  amount: number | null;
+  provider_event_id: string | null;
+  failure_reason: string | null;
   created_at: string;
   client?: Pick<Client, "name" | "email"> | null;
 };

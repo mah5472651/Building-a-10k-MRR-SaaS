@@ -3,6 +3,8 @@ import { AgencyShell } from "@/components/agency-shell";
 import { requireCurrentAgency } from "@/lib/data";
 import { createServerSupabase } from "@/lib/supabase";
 import { updatePasswordAction } from "@/lib/auth-actions";
+import { defaultAlertRules } from "@/lib/analytics";
+import type { AlertRule } from "@/types/handoff";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +20,30 @@ async function saveSettingsAction(formData: FormData) {
       logo_url: String(formData.get("logo_url") ?? "") || null,
       brand_color: String(formData.get("brand_color") ?? "") || null,
       outbound_webhook_url: String(formData.get("outbound_webhook_url") ?? "") || null,
+      alert_rules: buildAlertRules(formData),
     })
     .eq("id", agency.id);
 
   redirect("/settings?saved=1");
+}
+
+function buildAlertRules(formData: FormData): AlertRule[] {
+  return [
+    {
+      id: "deposit-threshold",
+      name: "Deposit pending too long",
+      stage: "deposit",
+      threshold_hours: Math.max(1, Number(formData.get("deposit_threshold_hours") ?? 48)),
+      enabled: formData.get("deposit_alert_enabled") === "on",
+    },
+    {
+      id: "agreement-threshold",
+      name: "Agreement unsigned too long",
+      stage: "agreement",
+      threshold_hours: Math.max(1, Number(formData.get("agreement_threshold_hours") ?? 24)),
+      enabled: formData.get("agreement_alert_enabled") === "on",
+    },
+  ];
 }
 
 export default async function SettingsPage({
@@ -31,6 +53,9 @@ export default async function SettingsPage({
 }) {
   const params = await searchParams;
   const { agency, email } = await requireCurrentAgency();
+  const alertRules = agency.alert_rules?.length ? agency.alert_rules : defaultAlertRules;
+  const depositRule = alertRules.find((rule) => rule.stage === "deposit") ?? defaultAlertRules[0];
+  const agreementRule = alertRules.find((rule) => rule.stage === "agreement") ?? defaultAlertRules[1];
   return (
     <AgencyShell title="Settings" active="Settings" agencyId={agency.id}>
       {params.error ? (
@@ -68,6 +93,42 @@ export default async function SettingsPage({
           <span className="label">Account email</span>
           <input className="field mt-1" value={email} disabled />
         </label>
+        <div className="rounded-2xl border border-[var(--line)] bg-white/[0.035] p-4">
+          <h2 className="serif text-[19px] font-medium">Custom alert rules</h2>
+          <p className="mt-1 text-sm text-[var(--ink-soft)]">
+            Configure when Aeitron AI should flag stalled clients inside Analytics and Notifications.
+          </p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="label">Deposit pending threshold</span>
+              <input
+                className="field mt-1"
+                name="deposit_threshold_hours"
+                type="number"
+                min={1}
+                defaultValue={depositRule.threshold_hours}
+              />
+              <span className="mt-2 flex items-center gap-2 text-xs text-[var(--ink-soft)]">
+                <input name="deposit_alert_enabled" type="checkbox" defaultChecked={depositRule.enabled} />
+                Enable deposit alert
+              </span>
+            </label>
+            <label className="block">
+              <span className="label">Agreement unsigned threshold</span>
+              <input
+                className="field mt-1"
+                name="agreement_threshold_hours"
+                type="number"
+                min={1}
+                defaultValue={agreementRule.threshold_hours}
+              />
+              <span className="mt-2 flex items-center gap-2 text-xs text-[var(--ink-soft)]">
+                <input name="agreement_alert_enabled" type="checkbox" defaultChecked={agreementRule.enabled} />
+                Enable agreement alert
+              </span>
+            </label>
+          </div>
+        </div>
         <button className="btn-primary w-full md:w-auto md:px-6" type="submit">
           Save settings
         </button>

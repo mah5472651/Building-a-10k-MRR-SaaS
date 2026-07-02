@@ -51,7 +51,16 @@ export async function POST(request: NextRequest) {
     metadata: {
       kind: "client_deposit",
       client_id: bundle.client.id,
+      agency_id: bundle.agency.id,
       token,
+    },
+    payment_intent_data: {
+      metadata: {
+        kind: "client_deposit",
+        client_id: bundle.client.id,
+        agency_id: bundle.agency.id,
+        token,
+      },
     },
     success_url: `${appUrl}/c/${token}/kickoff?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/c/${token}/deposit?canceled=1`,
