@@ -25,6 +25,8 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 - Stalled client nudge cron and Twilio helper
 - Command palette with `Ctrl + K`
 - Clients card/table toggle
+- Button reliability hardening for copy, client-link generation, checkout, send-link email, slot removal, uploads, intake save, signature save, and kickoff booking
+- All decorative/no-op controls are avoided; visible buttons must either perform an action, submit a form, navigate, or be clearly disabled
 - Unit tests for validation, client state, paywall behavior, notification events, average completion, and deposit recommendation
 
 ## Premium Visual Direction
@@ -102,6 +104,16 @@ Motion tokens and classes in `globals.css`:
 - Notification bell: floating motion, realtime pulse, dark glass popover
 - Status badges: bordered translucent pills with colored dots
 - Progress rail: amber glowing fill, pulsing active step, checked completed dots
+
+## Interaction Reliability Rules
+- Every network button must handle loading, success, and failure states.
+- Fetch handlers must tolerate non-JSON error responses.
+- Clipboard actions must use a textarea fallback when `navigator.clipboard` is unavailable.
+- Random ID generation must use `crypto.randomUUID()` only with a fallback for older browsers.
+- File upload must stop early with a friendly message when no file is selected.
+- Buttons that do not perform an action should not be rendered as buttons.
+- Stripe buttons should show user-friendly unavailable messages when Stripe is not configured.
+- Route handlers should return JSON errors instead of crashing whenever possible.
 
 ## Database Tables
 Supabase tables:

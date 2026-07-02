@@ -29,20 +29,25 @@ export function GenerateLinkButton({ flows = [] }: { flows?: OnboardingFlow[] })
         onClick={async () => {
           setLoading(true);
           setError("");
-          const response = await fetch("/api/client-links", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ flow_id: flowId || undefined }),
-          });
-          const payload = await response.json();
-          setLoading(false);
-          if (!response.ok) {
-            setError(payload.error ?? "Could not generate link.");
-            return;
+          try {
+            const response = await fetch("/api/client-links", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ flow_id: flowId || undefined }),
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              setError(payload.error ?? "Could not generate link.");
+              return;
+            }
+            setUrl(payload.url);
+            await copyText(payload.url);
+            router.refresh();
+          } catch {
+            setError("Could not generate link.");
+          } finally {
+            setLoading(false);
           }
-          setUrl(payload.url);
-          await navigator.clipboard.writeText(payload.url);
-          router.refresh();
         }}
       >
         {loading ? (
@@ -62,4 +67,19 @@ export function GenerateLinkButton({ flows = [] }: { flows?: OnboardingFlow[] })
       {error ? <p className="text-sm text-[var(--red)]">{error}</p> : null}
     </div>
   );
+}
+
+async function copyText(value: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    const element = document.createElement("textarea");
+    element.value = value;
+    element.style.position = "fixed";
+    element.style.opacity = "0";
+    document.body.appendChild(element);
+    element.select();
+    document.execCommand("copy");
+    document.body.removeChild(element);
+  }
 }

@@ -12,7 +12,7 @@ export function CopyButton({ value }: { value: string }) {
         type="button"
         className="btn-secondary flex items-center justify-center gap-2 text-sm"
         onClick={async () => {
-          await navigator.clipboard.writeText(value);
+          await copyText(value);
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         }}
@@ -28,4 +28,19 @@ export function CopyButton({ value }: { value: string }) {
       ) : null}
     </>
   );
+}
+
+async function copyText(value: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    const element = document.createElement("textarea");
+    element.value = value;
+    element.style.position = "fixed";
+    element.style.opacity = "0";
+    document.body.appendChild(element);
+    element.select();
+    document.execCommand("copy");
+    document.body.removeChild(element);
+  }
 }

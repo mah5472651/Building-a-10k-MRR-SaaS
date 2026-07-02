@@ -18,15 +18,25 @@ export function FileUploadBlock({ token }: { token: string }) {
         onSubmit={async (event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
+          const files = form.getAll("files").filter((file) => file instanceof File && file.size > 0);
+          if (!files.length) {
+            setMessage("Choose at least one file first.");
+            return;
+          }
           setLoading(true);
           setMessage("");
-          const response = await fetch(`/api/client-flow/${token}/upload`, {
-            method: "POST",
-            body: form,
-          });
-          const payload = await response.json();
-          setLoading(false);
-          setMessage(response.ok ? `${payload.files.length} file(s) uploaded.` : payload.error ?? "Upload failed.");
+          try {
+            const response = await fetch(`/api/client-flow/${token}/upload`, {
+              method: "POST",
+              body: form,
+            });
+            const payload = await response.json().catch(() => ({}));
+            setMessage(response.ok ? `${payload.files?.length ?? 0} file(s) uploaded.` : payload.error ?? "Upload failed.");
+          } catch {
+            setMessage("Upload failed.");
+          } finally {
+            setLoading(false);
+          }
         }}
       >
         <input className="field" name="files" type="file" multiple />

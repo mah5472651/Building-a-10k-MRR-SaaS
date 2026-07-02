@@ -15,18 +15,23 @@ export function SendLinkForm({ clientId }: { clientId: string }) {
         event.preventDefault();
         setLoading(true);
         setMessage("");
-        const response = await fetch("/api/client-links/send", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ client_id: clientId, email }),
-        });
-        const payload = await response.json();
-        setLoading(false);
-        if (!response.ok) {
-          setMessage(payload.error ?? "Could not send link.");
-          return;
+        try {
+          const response = await fetch("/api/client-links/send", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ client_id: clientId, email }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            setMessage(payload.error ?? "Could not send link.");
+            return;
+          }
+          setMessage(payload.skipped ? "Email provider not configured, but the link is ready to copy." : "Link sent.");
+        } catch {
+          setMessage("Could not send link.");
+        } finally {
+          setLoading(false);
         }
-        setMessage(payload.skipped ? "Email provider not configured, but the link is ready to copy." : "Link sent.");
       }}
     >
       <input

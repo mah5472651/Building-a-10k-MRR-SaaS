@@ -21,10 +21,10 @@ export function ClientPipeline({ clients }: { clients: Client[] }) {
     <div>
       <div className="mb-4 flex justify-end">
         <div className="inline-grid grid-cols-2 rounded-lg border border-[var(--line)] bg-[var(--paper-50)] p-1">
-          <button className={`grid h-8 w-9 place-items-center rounded-md ${view === "cards" ? "bg-white shadow-sm" : ""}`} onClick={() => setView("cards")} type="button" aria-label="Card view">
+          <button className={`grid h-8 w-9 place-items-center rounded-md ${view === "cards" ? "bg-white/10 text-[var(--amber-100)] shadow-sm" : ""}`} onClick={() => setView("cards")} type="button" aria-label="Card view">
             <LayoutGrid size={15} />
           </button>
-          <button className={`grid h-8 w-9 place-items-center rounded-md ${view === "table" ? "bg-white shadow-sm" : ""}`} onClick={() => setView("table")} type="button" aria-label="Table view">
+          <button className={`grid h-8 w-9 place-items-center rounded-md ${view === "table" ? "bg-white/10 text-[var(--amber-100)] shadow-sm" : ""}`} onClick={() => setView("table")} type="button" aria-label="Table view">
             <Table2 size={15} />
           </button>
         </div>

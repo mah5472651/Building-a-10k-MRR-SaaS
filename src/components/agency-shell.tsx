@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
+import { LayoutDashboard, Settings, Users, WalletCards, Workflow } from "lucide-react";
 import { signOutAction } from "@/lib/auth-actions";
 import { Logo } from "./logo";
 import { NotificationCenter } from "./notification-center";
@@ -29,9 +29,9 @@ export function AgencyShell({
       <aside className="glass-sidebar hidden px-3 py-5 text-[var(--ink-800)] md:fixed md:inset-y-0 md:left-0 md:flex md:w-16 md:flex-col lg:w-[260px]">
         <div className="hidden items-center justify-between px-2 lg:flex">
           <Logo />
-          <button className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white/5 text-[var(--ink-soft)]" type="button" aria-label="Collapse sidebar">
-            <ChevronLeft size={16} />
-          </button>
+          <span className="rounded-full border border-[var(--line)] bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
+            Live
+          </span>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

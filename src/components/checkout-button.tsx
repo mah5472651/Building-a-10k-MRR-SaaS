@@ -23,18 +23,23 @@ export function CheckoutButton({
         onClick={async () => {
           setLoading(true);
           setError("");
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const data = await response.json();
-          setLoading(false);
-          if (!response.ok || !data.url) {
-            setError(data.error ?? "Checkout is unavailable.");
-            return;
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.url) {
+              setError(data.error ?? "Checkout is unavailable.");
+              return;
+            }
+            window.location.href = data.url;
+          } catch {
+            setError("Checkout is unavailable.");
+          } finally {
+            setLoading(false);
           }
-          window.location.href = data.url;
         }}
       >
         {loading ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" /> : label}

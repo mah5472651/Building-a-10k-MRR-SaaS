@@ -71,7 +71,7 @@ export function MilestoneEditor({ milestones }: { milestones: PaymentMilestone[]
           onClick={() =>
             setItems([
               ...items,
-              { id: crypto.randomUUID(), label: "Next milestone", amount: 0, due: "midpoint" },
+              { id: createMilestoneId(), label: "Next milestone", amount: 0, due: "midpoint" },
             ])
           }
         >
@@ -81,4 +81,12 @@ export function MilestoneEditor({ milestones }: { milestones: PaymentMilestone[]
       ) : null}
     </div>
   );
+}
+
+function createMilestoneId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `milestone-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
