@@ -89,8 +89,11 @@ export type Client = {
   scheduled_at: string | null;
   meeting_time: string | null;
   status: ClientStatus;
+  current_stage?: ClientStep | null;
   created_at: string;
   updated_at: string;
+  link_sent_at?: string | null;
+  assigned_to?: string | null;
   last_active_at: string | null;
   reminder_24h_sent_at: string | null;
   reminder_3d_sent_at: string | null;

@@ -11,7 +11,7 @@ const stages = [
 
 export async function getAgencyAnalytics(agencyId: string) {
   const supabase = await createServerSupabase();
-  const [{ data: clients }, { data: flows }, { data: paymentEvents }] = await Promise.all([
+  const [{ data: clients }, { data: flows }, { data: paymentEvents }, { data: stageEvents }, { data: agency }] = await Promise.all([
     supabase.from("clients").select("*").eq("agency_id", agencyId).order("created_at", { ascending: false }),
     supabase.from("onboarding_flows").select("*").eq("agency_id", agencyId),
     supabase
@@ -20,11 +20,24 @@ export async function getAgencyAnalytics(agencyId: string) {
       .eq("agency_id", agencyId)
       .order("created_at", { ascending: false })
       .limit(20),
+    supabase
+      .from("stage_events")
+      .select("client_id,stage,entered_at")
+      .eq("agency_id", agencyId)
+      .order("entered_at", { ascending: false }),
+    supabase.from("agencies").select("alert_rules").eq("id", agencyId).single(),
   ]);
 
   const clientRows = (clients ?? []) as Client[];
   const flowRows = (flows ?? []) as OnboardingFlow[];
   const flowById = new Map(flowRows.map((flow) => [flow.id, flow]));
+  const rules = ((agency?.alert_rules as AlertRule[] | null | undefined)?.length ? agency?.alert_rules : defaultAlertRules) as AlertRule[];
+  const eventRows = (stageEvents ?? []) as { client_id: string; stage: string; entered_at: string }[];
+  const eventCountByClientStage = new Map<string, number>();
+  eventRows.forEach((event) => {
+    const key = `${event.client_id}:${event.stage}`;
+    eventCountByClientStage.set(key, (eventCountByClientStage.get(key) ?? 0) + 1);
+  });
   const now = Date.now();
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -36,12 +49,15 @@ export async function getAgencyAnalytics(agencyId: string) {
       const flow = flowById.get(client.flow_id);
       const value = getDepositValue(flow);
       const daysStalled = Math.max(0, Math.floor((now - new Date(client.last_active_at ?? client.updated_at ?? client.created_at).getTime()) / 86400000));
+      const stage = getStuckStage(client);
+      const rule = rules.find((item) => item.enabled && item.stage === stage);
+      const thresholdDays = Math.max(1, Math.ceil(Number(rule?.threshold_hours ?? 72) / 24));
       return {
         client,
         value,
         daysStalled,
-        stage: getStuckStage(client),
-        atRisk: daysStalled >= 2,
+        stage,
+        atRisk: daysStalled >= thresholdDays,
       };
     })
     .sort((a, b) => Number(b.atRisk) - Number(a.atRisk) || b.value - a.value);
@@ -84,7 +100,7 @@ export async function getAgencyAnalytics(agencyId: string) {
     .map((row) => ({
       ...row,
       score: Math.round(row.value * Math.max(1, row.daysStalled) * (1 + completedStepCount(row.client) / 4)),
-      reason: `${row.client.name ?? "Client"} is stuck at ${row.stage} for ${row.daysStalled} day(s), with $${row.value.toFixed(2)} pending.`,
+      reason: `${row.client.name ?? "Client"} is stuck at ${row.stage} for ${row.daysStalled} day(s), opened that stage ${eventCountByClientStage.get(`${row.client.id}:${row.stage}`) ?? 0} time(s), with $${row.value.toFixed(2)} pending.`,
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
@@ -132,7 +148,7 @@ function getDepositValue(flow?: OnboardingFlow) {
 }
 
 function getStuckStage(client: Client) {
-  if (!client.name) return "intake";
+  if (!client.name) return "details";
   if (!client.signed_at) return "agreement";
   if (!client.paid_at) return "deposit";
   if (!client.scheduled_at) return "kickoff";

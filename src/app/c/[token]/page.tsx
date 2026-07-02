@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { ClientFrame } from "@/components/client-frame";
 import { DetailsForm } from "@/components/client-flow-form";
 import { getClientBundleByToken } from "@/lib/data";
+import { recordStageEvent } from "@/lib/stage-events";
 import { nextClientPath } from "@/lib/state";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ export default async function ClientDetailsPage({
   const bundle = await getClientBundleByToken(token);
   if (!bundle) notFound();
   if (nextClientPath(token, bundle.client) !== `/c/${token}`) redirect(nextClientPath(token, bundle.client));
+  await recordStageEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, stage: "details" });
 
   return (
     <ClientFrame

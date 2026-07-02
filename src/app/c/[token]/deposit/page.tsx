@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { CheckoutButton } from "@/components/checkout-button";
 import { ClientFrame } from "@/components/client-frame";
 import { getClientBundleByToken } from "@/lib/data";
+import { recordStageEvent } from "@/lib/stage-events";
 import { nextClientPath } from "@/lib/state";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function DepositPage({
   if (!bundle) notFound();
   if (!bundle.client.signed_at) redirect(`/c/${token}/agreement`);
   if (nextClientPath(token, bundle.client) !== `/c/${token}/deposit`) redirect(nextClientPath(token, bundle.client));
+  await recordStageEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, stage: "deposit" });
 
   return (
     <ClientFrame

@@ -9,6 +9,9 @@ import { CopyButton } from "@/components/copy-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { EmptyState } from "@/components/empty-state";
 import { FunnelAnalytics } from "@/components/funnel-analytics";
+import { RevenueLeakPanel } from "@/components/revenue-leak-panel";
+import { PriorityFollowupList } from "@/components/priority-followup-list";
+import { getAgencyAnalytics } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +23,21 @@ export default async function DashboardPage({
   const params = await searchParams;
   const { agency } = await requireCurrentAgency();
   const { clients, stats, flows, needsAttention } = await getDashboardData(agency.id);
+  const analytics = await getAgencyAnalytics(agency.id);
   const readyLink = params.link ? `${appUrl}/c/${params.link}` : "";
   const depositRecommendation = getDepositRecommendation(clients);
 
   return (
     <AgencyShell title="Dashboard" active="Dashboard" agencyId={agency.id}>
       <RealtimeRefresh agencyId={agency.id} />
-      <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <p className="text-sm text-[var(--ink-soft)]">Money leaks, follow-up priority, and live handoff operations in one command view.</p>
+        <Link className="btn-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm" href="/api/reports/monthly" target="_blank">
+          Export Monthly Report
+        </Link>
+      </div>
+
+      <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {[
           { label: "Links", value: stats.total, icon: Link2, delta: "+0.30%" },
           { label: "Intake", value: stats.inProgress, icon: UserRoundCheck, delta: "+0.30%" },
@@ -47,6 +58,12 @@ export default async function DashboardPage({
             </section>
           );
         })}
+        <RevenueLeakPanel analytics={analytics} compact />
+      </div>
+
+      <div className="mb-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <RevenueLeakPanel analytics={analytics} />
+        <PriorityFollowupList analytics={analytics} compact />
       </div>
 
       <div className="mb-4 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">

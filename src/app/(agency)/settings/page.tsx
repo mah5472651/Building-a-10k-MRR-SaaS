@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AgencyShell } from "@/components/agency-shell";
+import { AlertRuleBuilder } from "@/components/alert-rule-builder";
 import { requireCurrentAgency } from "@/lib/data";
 import { createServerSupabase } from "@/lib/supabase";
 import { updatePasswordAction } from "@/lib/auth-actions";
@@ -93,42 +94,7 @@ export default async function SettingsPage({
           <span className="label">Account email</span>
           <input className="field mt-1" value={email} disabled />
         </label>
-        <div className="rounded-2xl border border-[var(--line)] bg-white/[0.035] p-4">
-          <h2 className="serif text-[19px] font-medium">Custom alert rules</h2>
-          <p className="mt-1 text-sm text-[var(--ink-soft)]">
-            Configure when Aeitron AI should flag stalled clients inside Analytics and Notifications.
-          </p>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="block">
-              <span className="label">Deposit pending threshold</span>
-              <input
-                className="field mt-1"
-                name="deposit_threshold_hours"
-                type="number"
-                min={1}
-                defaultValue={depositRule.threshold_hours}
-              />
-              <span className="mt-2 flex items-center gap-2 text-xs text-[var(--ink-soft)]">
-                <input name="deposit_alert_enabled" type="checkbox" defaultChecked={depositRule.enabled} />
-                Enable deposit alert
-              </span>
-            </label>
-            <label className="block">
-              <span className="label">Agreement unsigned threshold</span>
-              <input
-                className="field mt-1"
-                name="agreement_threshold_hours"
-                type="number"
-                min={1}
-                defaultValue={agreementRule.threshold_hours}
-              />
-              <span className="mt-2 flex items-center gap-2 text-xs text-[var(--ink-soft)]">
-                <input name="agreement_alert_enabled" type="checkbox" defaultChecked={agreementRule.enabled} />
-                Enable agreement alert
-              </span>
-            </label>
-          </div>
-        </div>
+        <AlertRuleBuilder depositRule={depositRule} agreementRule={agreementRule} />
         <button className="btn-primary w-full md:w-auto md:px-6" type="submit">
           Save settings
         </button>

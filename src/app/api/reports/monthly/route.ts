@@ -1,11 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAgencyAnalytics } from "@/lib/analytics";
 import { requireCurrentAgency } from "@/lib/data";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const { agency } = await requireCurrentAgency();
   const analytics = await getAgencyAnalytics(agency.id);
+  const month = request.nextUrl.searchParams.get("month") ?? new Date().toISOString().slice(0, 7);
   const generatedAt = new Date().toLocaleString("en", { dateStyle: "medium", timeStyle: "short" });
+  const collected = analytics.cohorts.reduce((sum, cohort) => sum + cohort.ltv, 0);
+  const totalClients = analytics.bottlenecks[0]?.current ?? 0;
+  const completed = analytics.bottlenecks[3]?.next ?? 0;
+  const conversion = totalClients ? Math.round((completed / totalClients) * 100) : 0;
 
   const html = `<!doctype html>
 <html>
@@ -35,9 +40,10 @@ export async function GET() {
   <main>
     <header>
       <div>
+        ${agency.logo_url ? `<img src="${escapeHtml(agency.logo_url)}" alt="" style="width:48px;height:48px;border-radius:12px;object-fit:cover;margin-bottom:12px" />` : ""}
         <p class="muted">Aeitron AI performance report</p>
         <h1>${escapeHtml(agency.name)} Monthly Report</h1>
-        <p class="muted">Generated ${escapeHtml(generatedAt)}</p>
+        <p class="muted">Month ${escapeHtml(month)} · Generated ${escapeHtml(generatedAt)}</p>
       </div>
       <button onclick="window.print()">Print / Save PDF</button>
     </header>
@@ -46,6 +52,11 @@ export async function GET() {
       <div class="card"><span class="muted">Pending revenue</span><div class="value">$${analytics.revenue.pending.toFixed(2)}</div></div>
       <div class="card"><span class="muted">At-risk revenue</span><div class="value">$${analytics.revenue.atRisk.toFixed(2)}</div></div>
       <div class="card"><span class="muted">Potential lost this month</span><div class="value">$${analytics.revenue.potentialLostThisMonth.toFixed(2)}</div></div>
+    </section>
+    <section class="grid">
+      <div class="card"><span class="muted">Total clients</span><div class="value">${totalClients}</div></div>
+      <div class="card"><span class="muted">Revenue collected</span><div class="value">$${collected.toFixed(2)}</div></div>
+      <div class="card"><span class="muted">Conversion rate</span><div class="value">${conversion}%</div></div>
     </section>
 
     <h2>Revenue Leak Detector</h2>

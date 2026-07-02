@@ -1,6 +1,8 @@
 import { CheckoutButton } from "@/components/checkout-button";
 import { AgencyShell } from "@/components/agency-shell";
 import { requireCurrentAgency } from "@/lib/data";
+import { getAgencyAnalytics } from "@/lib/analytics";
+import { PaymentRecoveryPanel } from "@/components/payment-recovery-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,7 @@ const plans = [
 
 export default async function BillingPage() {
   const { agency } = await requireCurrentAgency();
+  const analytics = await getAgencyAnalytics(agency.id);
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY);
 
   return (
@@ -72,6 +75,9 @@ export default async function BillingPage() {
           </div>
         ) : null}
       </section>
+      <div className="mt-6">
+        <PaymentRecoveryPanel analytics={analytics} />
+      </div>
       <section className="card mt-6 p-6">
         <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
           <div>

@@ -6,6 +6,7 @@ import { getClientBundleByToken } from "@/lib/data";
 import { getStripe } from "@/lib/stripe";
 import { sendAgencyWebhook } from "@/lib/webhooks";
 import { recordNotificationEvent } from "@/lib/notifications";
+import { recordStageEvent } from "@/lib/stage-events";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ export default async function KickoffPage({
   if (!bundle) notFound();
   if (!bundle.client.paid_at && Number(bundle.flow.deposit_amount) > 0) redirect(`/c/${token}/deposit`);
   if (bundle.client.scheduled_at) redirect(`/c/${token}/confirmation`);
+  await recordStageEvent({ agencyId: bundle.agency.id, clientId: bundle.client.id, stage: "kickoff" });
 
   return (
     <ClientFrame

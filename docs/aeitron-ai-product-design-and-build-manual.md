@@ -7,16 +7,18 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 
 ## Core Routes
 - Agency auth: `/login`, `/signup`, `/forgot-password`, `/auth/callback`
-- Agency app: `/dashboard`, `/analytics`, `/clients`, `/clients/[id]`, `/flow`, `/settings`, `/billing`, `/onboarding`
+- Agency app: `/dashboard`, `/analytics`, `/analytics/retention`, `/team`, `/clients`, `/clients/[id]`, `/flow`, `/settings`, `/billing`, `/onboarding`
 - Client flow: `/c/[token]`, `/c/[token]/agreement`, `/c/[token]/deposit`, `/c/[token]/kickoff`, `/c/[token]/confirmation`
 - Preview: `/preview/[flowId]`
-- API: client links, client flow save/upload, manual client nudges, Stripe checkout/webhooks, payment recovery nudges, notifications, slots, summary, signature record, monthly reports, cron nudges
+- API: client links, client flow save/upload, manual client nudges, dashboard revenue/funnel/time/priority/cohort/team JSON, billing failed-payment/retry JSON, settings alert-rules JSON, Stripe checkout/webhooks, payment recovery nudges, notifications, slots, summary, signature record, monthly reports, cron nudges
 
 ## Built Features
 - Supabase email/password auth, magic link, logout, password reset, and password update
 - First-run agency setup with agency name, optional logo, default questions, deposit amount, and first kickoff slot
 - Agency dashboard with realtime refresh, stats, weekly collected deposits, needs-attention widget, smart deposit recommendation, funnel analytics, recent activity, and client link generation
 - Analytics command center with revenue leak detector, at-risk revenue, potential lost revenue, bottleneck stage heatmap, multi-flow conversion compare, time-to-close breakdown, send-time heatmap, smart follow-up prioritization, cohorts, payment recovery, team performance, custom alert rules, and monthly printable report export
+- Dashboard embeds the highest-priority revenue leak detector, at-risk metric, priority call list, and monthly report export directly above the operational panels
+- Dashboard API endpoints expose `/api/dashboard/revenue-leak`, `/api/dashboard/funnel-breakdown`, `/api/dashboard/time-to-close`, `/api/dashboard/priority-queue`, `/api/dashboard/cohorts`, and `/api/dashboard/team-performance`
 - Manual client nudge buttons in analytics send a real follow-up email with the client's secure handoff link and record a notification event
 - Client records with progress, answers, signature audit, uploaded files, payment schedule, printable signature record, and printable onboarding summary
 - Flow editor with multiple onboarding flows, active/default flow selection, questions, dropdown options, conditional questions, agreement text, deposit amount, payment milestones, reassurance copy, kickoff slots, and client preview
@@ -25,6 +27,7 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 - Stripe failed deposit/payment-intent and failed subscription invoice events are recorded into a recovery table for agency action
 - Payment recovery panel can send client dunning/retry emails through Resend
 - Payment recovery emails include the real client deposit retry link when the failed Stripe event is tied to a client
+- Billing exposes failed-payment JSON at `/api/billing/failed-payments` and retry-link JSON at `/api/billing/retry-payment`
 - Realtime notification center, live status badge, online presence count, client/slot/notification realtime refresh
 - Resend transactional email hooks and Zapier/Make outbound webhook URL
 - Stalled client nudge cron and Twilio helper
@@ -134,13 +137,14 @@ Motion tokens and classes in `globals.css`:
 - Recovery actions must keep their own button state and call `/api/recovery/nudge`; they should not depend on notification/search parent state.
 - Manual nudge actions must keep their own button state and call `/api/clients/[id]/nudge`; they should record `manual_nudge` in `notification_events`.
 - Monthly report export returns standalone printable HTML from `/api/reports/monthly` and must not require client-side app state.
+- Monthly report export accepts `?month=YYYY-MM`, includes agency logo when present, and shows total clients, collected revenue, and conversion rate.
 
 ## Analytics And Recovery Suite
 The `/analytics` page is the agency owner cockpit for deciding where money is stuck and what action to take next.
 
 Revenue Leak Detector:
 - Calculates unpaid, incomplete clients using each client's flow deposit/payment schedule value.
-- Flags at-risk rows when the client has stalled for at least 2 days.
+- Flags at-risk rows using configurable alert thresholds, defaulting to 72 hours when no rule exists.
 - Shows pending revenue, at-risk revenue, and potential lost revenue this month.
 - Table columns: client name, stage stuck, value, days stalled, and action buttons for real client nudge email and phone call.
 
@@ -155,7 +159,7 @@ Time-To-Close Analytics:
 
 Smart Follow-up Prioritization:
 - Scores clients with value, stall time, and completion depth.
-- Shows a ranked daily call list with plain-language reasoning, direct nudge email, call, and client-detail actions.
+- Shows a ranked daily call list with plain-language reasoning, stage view counts from `stage_events`, direct nudge email, call, and client-detail actions.
 
 Cohorts And Team View:
 - Groups clients by created month and estimates repeat rate from repeated client emails.
@@ -170,10 +174,11 @@ Payment Recovery:
 Custom Alerts:
 - Agencies configure deposit pending and agreement unsigned thresholds in `/settings`.
 - Rules are stored in `agencies.alert_rules` as JSON and displayed on `/analytics`.
+- Alert rules are also exposed through `/api/settings/alert-rules` for GET, POST, and DELETE.
 - `/api/cron/nudges` evaluates enabled alert rules, sends agency alert emails, records `custom_alert_[stage]` notification events, and dedupes alerts per client per day.
 
 Monthly Report Export:
-- `/api/reports/monthly` returns printable HTML with summary revenue, stuck clients, bottlenecks, and priority follow-ups.
+- `/api/reports/monthly?month=YYYY-MM` returns printable HTML with summary revenue, collected revenue, conversion rate, stuck clients, bottlenecks, and priority follow-ups.
 - The browser print dialog can save the report as PDF.
 
 ## Database Tables
@@ -186,6 +191,7 @@ Supabase tables:
 - `notification_events`
 - `client_files`
 - `payment_events`
+- `stage_events`
 
 RLS protects agency-owned data. Public client token routes use server-side API handlers and service role where needed.
 
@@ -197,6 +203,7 @@ Migration files:
 - `supabase/004_round2_features.sql`: outbound webhook URL, reassurance copy, paid index
 - `supabase/005_realtime_notifications.sql`: notification realtime publication and index
 - `supabase/006_analytics_recovery.sql`: agency alert rules JSON, payment recovery events table, RLS, and recovery indexes
+- `supabase/007_advanced_dashboard.sql`: client current stage, link sent timestamp, assigned user, stage events table, RLS, and dashboard analytics indexes
 
 ## Environment Variables
 Required:
@@ -227,11 +234,22 @@ Optional integrations:
 - `src/components/command-palette.tsx`: Ctrl+K navigation
 - `src/components/client-pipeline.tsx`: clients card/table switcher
 - `src/components/recovery-button.tsx`: payment recovery retry/dunning action button
+- `src/components/revenue-leak-panel.tsx`: dashboard and analytics revenue leak detector
+- `src/components/bottleneck-heatmap.tsx`: funnel drop-off visualization
+- `src/components/time-to-close-chart.tsx`: stage timing and send-time heatmap
+- `src/components/priority-followup-list.tsx`: scored daily client call list
+- `src/components/cohort-retention-table.tsx`: monthly cohort and repeat client table
+- `src/components/payment-recovery-panel.tsx`: failed payment and churn-risk panel
+- `src/components/team-performance-table.tsx`: team leaderboard table
+- `src/components/alert-rule-builder.tsx`: custom threshold settings UI
 - `src/app/(agency)/analytics/page.tsx`: analytics, revenue leak, bottleneck, recovery, alert, cohort, and report UI
+- `src/app/(agency)/analytics/retention/page.tsx`: focused retention/cohort view
+- `src/app/(agency)/team/page.tsx`: team performance view
 - `src/app/api/reports/monthly/route.ts`: printable monthly performance report export
 - `src/app/api/recovery/nudge/route.ts`: Resend-powered recovery email endpoint
 - `src/app/api/clients/[id]/nudge/route.ts`: manual client follow-up email endpoint
 - `src/lib/analytics.ts`: agency analytics calculations for revenue, bottlenecks, time-to-close, cohorts, follow-ups, payment events, and team performance
+- `src/lib/stage-events.ts`: public client flow stage entry logging and current-stage updates
 - `src/lib/data.ts`: agency data, dashboard stats, recommendations, client bundles
 - `src/lib/state.ts`: client progress and paywall helpers
 - `src/lib/notifications.ts`: notification event recording
