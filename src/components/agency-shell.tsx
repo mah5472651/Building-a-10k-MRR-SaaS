@@ -88,12 +88,12 @@ export function AgencyShell({
       </nav>
       <main className="flex-1 px-4 py-8 md:ml-16 md:px-8 md:py-10 lg:ml-[260px]">
         <div className="agency-page mx-auto max-w-[1120px]">
-          <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)]">Overview</p>
               <h1 className="text-[26px] leading-[32px] font-semibold">{title}</h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <CommandPalette />
               {agencyId ? <NotificationCenter agencyId={agencyId} /> : null}
             </div>

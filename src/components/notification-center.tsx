@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Radio } from "lucide-react";
+import { Bell, Radio, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { createClientSupabase } from "@/lib/supabase-browser";
@@ -34,6 +34,14 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -77,7 +85,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
   const statusText = useMemo(() => (status === "live" ? "Live" : status === "connecting" ? "Connecting" : "Offline"), [status]);
 
   return (
-    <div className="relative flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <div className="hidden items-center gap-2 rounded-full border border-[var(--line)] bg-white/[0.045] px-3 py-2 text-xs font-medium text-[var(--ink-soft)] shadow-sm backdrop-blur-xl sm:flex">
         <span className={`h-2 w-2 rounded-full ${status === "live" ? "live-dot bg-[var(--teal)]" : "bg-[var(--red)]"}`} />
         <Radio size={14} />
@@ -85,7 +93,7 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
       </div>
       <button
         className="premium-float relative grid h-10 w-10 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.045] text-[var(--ink-800)] shadow-sm backdrop-blur-xl transition hover:border-[var(--ink-800)] hover:bg-white/[0.08]"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen(true)}
         type="button"
         aria-label="Notifications"
       >
@@ -97,25 +105,44 @@ export function NotificationCenter({ agencyId }: { agencyId: string }) {
         ) : null}
       </button>
       {open ? (
-        <div className="premium-popover absolute right-0 top-12 z-50 w-[min(340px,calc(100vw-2rem))] rounded-2xl border border-[var(--line)] bg-[rgba(10,14,24,0.94)] p-3 shadow-2xl backdrop-blur-2xl">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="label">Live notifications</p>
-            <span className="text-xs text-[var(--ink-soft)]">{statusText}</span>
-          </div>
-          <div className="max-h-80 space-y-2 overflow-auto">
-            {notifications.length ? (
-              notifications.map((item) => (
-                <div className="rounded-xl border border-[var(--line)] bg-white/[0.045] p-3 text-sm transition hover:border-[var(--ink-200)] hover:bg-white/[0.08]" key={item.id}>
-                  <p className="font-medium">{labels[item.event] ?? item.event}</p>
-                  <p className="mt-1 text-xs text-[var(--ink-soft)]">
-                    {item.client?.name ?? "Client"} · {new Date(item.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="rounded-lg bg-[var(--paper-50)] p-3 text-sm text-[var(--ink-soft)]">No live events yet.</p>
-            )}
-          </div>
+        <div className="fixed inset-0 z-[110] bg-black/55 px-4 py-5 backdrop-blur-md" onClick={() => setOpen(false)}>
+          <aside
+            className="premium-popover ml-auto flex h-full w-full max-w-md flex-col rounded-2xl border border-[var(--line)] bg-[rgba(10,14,24,0.97)] p-4 shadow-2xl backdrop-blur-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="label">Live notifications</p>
+                <h2 className="mt-1 text-xl font-semibold">Activity feed</h2>
+              </div>
+              <button
+                className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--line)] bg-white/[0.04] text-[var(--ink-soft)] transition hover:bg-white/[0.08]"
+                onClick={() => setOpen(false)}
+                type="button"
+                aria-label="Close notifications"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white/[0.04] px-3 py-2 text-xs text-[var(--ink-soft)]">
+              <span>{statusText}</span>
+              <span>{onlineCount} online</span>
+            </div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-auto pr-1">
+              {notifications.length ? (
+                notifications.map((item) => (
+                  <div className="rounded-xl border border-[var(--line)] bg-white/[0.045] p-3 text-sm transition hover:border-[var(--ink-200)] hover:bg-white/[0.08]" key={item.id}>
+                    <p className="font-medium">{labels[item.event] ?? item.event}</p>
+                    <p className="mt-1 text-xs text-[var(--ink-soft)]">
+                      {item.client?.name ?? "Client"} · {new Date(item.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-xl bg-white/[0.04] p-4 text-sm text-[var(--ink-soft)]">No live events yet.</p>
+              )}
+            </div>
+          </aside>
         </div>
       ) : null}
     </div>

@@ -27,6 +27,7 @@ Aeitron AI is a premium SaaS app for agencies to manage client handoff from link
 - Clients card/table toggle
 - Button reliability hardening for copy, client-link generation, checkout, send-link email, slot removal, uploads, intake save, signature save, and kickoff booking
 - All decorative/no-op controls are avoided; visible buttons must either perform an action, submit a form, navigate, or be clearly disabled
+- Search and notification overlays use separate fixed modal layers with high z-index, Escape/outside close behavior, and no layout overlap
 - Unit tests for validation, client state, paywall behavior, notification events, average completion, and deposit recommendation
 
 ## Premium Visual Direction
@@ -102,6 +103,7 @@ Motion tokens and classes in `globals.css`:
 - Cards: glass background, 18px radius, top-left highlight, hover lift
 - Sidebar: frosted dark glass, selected nav glow, amber active rail
 - Notification bell: floating motion, realtime pulse, dark glass popover
+- Search: Ctrl+K opens a full command palette that searches core pages and client records by name/email/status
 - Status badges: bordered translucent pills with colored dots
 - Progress rail: amber glowing fill, pulsing active step, checked completed dots
 
@@ -112,6 +114,7 @@ Motion tokens and classes in `globals.css`:
 - Random ID generation must use `crypto.randomUUID()` only with a fallback for older browsers.
 - File upload must stop early with a friendly message when no file is selected.
 - Buttons that do not perform an action should not be rendered as buttons.
+- Search and notification surfaces must never use small dropdowns that can overlap page cards; use fixed overlays/drawers.
 - Stripe buttons should show user-friendly unavailable messages when Stripe is not configured.
 - Route handlers should return JSON errors instead of crashing whenever possible.
 
